@@ -8,10 +8,60 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.StringJoiner;
     
 class Expr { }
-class ListExpr extends Expr { }
-class AtomExpr extends Expr { }
+class ListExpr extends Expr {
+
+    ArrayList<Expr> children = new ArrayList<Expr>();
+    
+    void addElement( Expr e ){
+	    children.add(e);
+    }
+
+    public boolean equals(Object e){
+
+	if( e instanceof ListExpr ){
+	    ListExpr l = (ListExpr)e;
+	    return children.equals(l.children);
+	} else {
+	    return false;
+	}
+    }
+
+    public String toString(){
+
+	ArrayList<String> strs = new ArrayList<String>();
+	for(Expr e : children){
+	    strs.add(e.toString());
+	}
+
+	StringBuffer buff = new StringBuffer();
+	buff.append('(');
+	buff.append( String.join(" ",strs) );
+	buff.append(')');
+	return buff.toString();
+    }
+}
+
+class AtomExpr extends Expr {
+    String str;
+    AtomExpr(String str){
+	this.str = str;
+    }
+    public boolean equals(Object e){
+	if( e instanceof AtomExpr ){
+	    AtomExpr a = (AtomExpr)e;
+	    return str.equals(a.str);
+	} else {
+	    return false;
+	}
+    }
+    public String toString() {
+	return str;
+    }
+}
 
 class ParseResult {
     Expr e;
@@ -67,16 +117,27 @@ public class GrunUtil {
     public ParseResult readList(int pos){
 
 	pos = skipWS(pos);
+	int length = text.length();
+	
 	ParseResult r = checkCharAt(pos,'(');
 	if( r != null ){
 	    pos = r.pos;
-	    while( true ){
+	    ListExpr l = new ListExpr();
+	    while( pos < length ){
 		ParseResult r2 = readExpr(pos);
 		if( r2 != null ){
 		    Expr e = r2.e;
+		    l.addElement(e);
 		    pos = r2.pos;
+		} else {
+		    break;
 		}
 	    }
+	    r = checkCharAt(pos,')');
+	    if( r != null )
+		return new ParseResult(l,r.pos);
+	    else
+		return null;
 	}
 	else {
 	    return null;
@@ -84,7 +145,28 @@ public class GrunUtil {
     }
 
     public ParseResult readAtom(int pos){
-	return null;
+
+	pos = skipWS(pos);
+	int length = text.length();
+
+	StringBuffer buff = new StringBuffer();
+
+	while( pos < length ){
+	    char c = text.charAt(pos);
+	    if( c != ' ' && c != ')' ){
+		buff.append(c);
+		pos++;
+	    } else {
+		break;
+	    }
+	}
+
+	if( buff.length() > 0 ){
+	    return new ParseResult( new AtomExpr(buff.toString()),
+				    pos );
+	} else {
+	    return null;
+	}
     }
     
     int skipWS(int pos){

@@ -21,8 +21,11 @@ class ListExpr extends Expr {
     }
 
     public boolean equals(Object e){
-
-	if( e instanceof ListExpr ){
+	
+	if( e == null ){
+	    return false;
+	}
+	else if( e instanceof ListExpr ){
 	    ListExpr l = (ListExpr)e;
 	    return children.equals(l.children);
 	} else {
@@ -51,7 +54,9 @@ class AtomExpr extends Expr {
 	this.str = str;
     }
     public boolean equals(Object e){
-	if( e instanceof AtomExpr ){
+	if( e == null ){
+	    return false;
+	} else if( e instanceof AtomExpr ){
 	    AtomExpr a = (AtomExpr)e;
 	    return str.equals(a.str);
 	} else {
@@ -119,7 +124,8 @@ public class GrunUtil {
 	pos = skipWS(pos);
 	int length = text.length();
 	
-	ParseResult r = checkCharAt(pos,'(');
+	ParseResult r = checkOpen(pos);
+	
 	if( r != null ){
 	    pos = r.pos;
 	    ListExpr l = new ListExpr();
@@ -153,9 +159,21 @@ public class GrunUtil {
 
 	while( pos < length ){
 	    char c = text.charAt(pos);
-	    if( c != ' ' && c != ')' ){
+	    char d = pos+1<length ? text.charAt(pos+1) : '\0';
+	    if( c != ' ' && c != '(' && c != ')' ){
 		buff.append(c);
 		pos++;
+	    } else if( c == '(' && d == ' ' ){
+		buff.append(c);
+		pos+=2;
+		break;
+	    } else if( c == ')' ){
+		char b = pos > 0 ? text.charAt(pos-1) : '\0';
+		if( b == ' ' ){
+		    buff.append(c);
+		    pos++;
+		} 
+		break;
 	    } else {
 		break;
 	    }
@@ -182,7 +200,7 @@ public class GrunUtil {
     }
 
     ParseResult checkCharAt(int pos,char c) {
-	if( text.charAt(pos) == c ){
+	if( pos < text.length() && text.charAt(pos) == c ){
 	    return new ParseResult(null,pos+1);
 	}
 	else {
@@ -190,6 +208,23 @@ public class GrunUtil {
 	}
     }
 
+    ParseResult checkOpen(int pos) {
+
+	int length = text.length();
+	
+	char c = text.charAt(pos);
+	char d = pos+1<length ? text.charAt(pos+1) : '\0';
+
+	if( c == '(' && d != ' '){
+	    return new ParseResult(null,pos+1);
+	}
+	else {
+	    return null;
+	}
+    }
+
+
+    
     
 }
 

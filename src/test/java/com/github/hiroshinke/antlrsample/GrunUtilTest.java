@@ -25,7 +25,7 @@ public class GrunUtilTest
     }
 
     Expr readExpr(String str){
-	GrunUtil g = new GrunUtil(str);
+	GrunReader g = new GrunReader(str);
 	ParseResult r = g.readExpr(0);
 	if( r != null ){
 	    return r.e;

@@ -3,64 +3,6 @@
 package com.github.hiroshinke.antlrsample;
 
 
-import java.util.ArrayList;
-
-class Expr { }
-class ListExpr extends Expr {
-
-    ArrayList<Expr> children = new ArrayList<Expr>();
-    
-    void addElement( Expr e ){
-	    children.add(e);
-    }
-
-    public boolean equals(Object e){
-	
-	if( e == null ){
-	    return false;
-	}
-	else if( e instanceof ListExpr ){
-	    ListExpr l = (ListExpr)e;
-	    return children.equals(l.children);
-	} else {
-	    return false;
-	}
-    }
-
-    public String toString(){
-
-	ArrayList<String> strs = new ArrayList<String>();
-	for(Expr e : children){
-	    strs.add(e.toString());
-	}
-
-	StringBuffer buff = new StringBuffer();
-	buff.append('(');
-	buff.append( String.join(" ",strs) );
-	buff.append(')');
-	return buff.toString();
-    }
-}
-
-class AtomExpr extends Expr {
-    String str;
-    AtomExpr(String str){
-	this.str = str;
-    }
-    public boolean equals(Object e){
-	if( e == null ){
-	    return false;
-	} else if( e instanceof AtomExpr ){
-	    AtomExpr a = (AtomExpr)e;
-	    return str.equals(a.str);
-	} else {
-	    return false;
-	}
-    }
-    public String toString() {
-	return str;
-    }
-}
 
 class ParseResult {
     Expr e;
@@ -199,8 +141,5 @@ public class GrunReader {
 	}
     }
 
-
-    
-    
 }
 

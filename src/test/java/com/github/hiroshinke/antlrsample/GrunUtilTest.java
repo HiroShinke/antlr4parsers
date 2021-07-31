@@ -83,8 +83,8 @@ public class GrunUtilTest
     @Test
     public void testApp5()
     {
-	Expr e = readExpr("(xxx ((1) 2) 3)");
-	ListExpr a = l( a("xxx"), l(l(a("1")), a("2")), a("3"));
+	Expr e = readExpr("(xxx (yyy (1) 2) 3)");
+	ListExpr a = l( a("xxx"), l(a("yyy"),l(a("1")), a("2")), a("3"));
 	assertTrue( e.equals(a) );
     }
     
@@ -122,9 +122,5 @@ public class GrunUtilTest
 	System.out.println(e);
 	assertTrue( e == null );
     }
-
-    
-
-
 
 }

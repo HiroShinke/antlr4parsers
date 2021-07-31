@@ -69,4 +69,25 @@ public class GrunUtil2Test
 	assertTrue( r.equals(strList("xxx/aaa","xxx/aaa")) );
     }
 
+    @Test
+    public void testApp4()
+    {
+	Expr e = readExpr("(xxx (aaa 1) (aaa 2))");
+	ArrayList<String> r = GrunUtil.findTag(e,"1");
+	System.out.println( "r=" + r );	
+	assertTrue( r.equals(strList("xxx/aaa/1")) );
+    }
+
+    @Test
+    public void testApp5()
+    {
+	Expr e = readExpr("(xxx (aaa 1) (aaa (bbb (ccc 1))))");
+	ArrayList<String> r = GrunUtil.findTag(e,"1");
+	System.out.println( "r=" + r );	
+	assertTrue( r.equals(strList("xxx/aaa/1","xxx/aaa/bbb/ccc/1")) );
+    }
+
+    
+
+    
 }

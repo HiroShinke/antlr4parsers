@@ -17,6 +17,84 @@ interface Continuation {
     ArrayList<String> process(Expr e);
 }
 
+abstract class Query<T> {
+
+    abstract ArrayList<Expr> selectNode(Expr e);    
+    Query<T> continuation;    
+
+    Query(){
+	this.continuation = null;
+    }
+
+    Query(Query<T> continuation){
+	this.continuation = continuation;
+    }
+
+    ArrayList<T> process(Expr e){
+	ArrayList<Expr> es = selectNode(e);
+	ArrayList<T> buff = new ArrayList<T>();
+	for( Expr c: es) {
+	    buff.addAll(continuation.process(c));
+	}
+	return buff;
+    }
+}
+
+class SelectSelfQuery<T> extends Query<T> {
+
+    Predicate<Expr> pred;
+
+    SelectSelfQuery(Predicate<Expr> pred) {
+	this.pred = pred;
+    }
+    
+    ArrayList<Expr> selectNode(Expr e){
+	ArrayList<Expr> buff = new ArrayList<Expr>();
+	if( pred.test(e) ){
+	    buff.add(e);
+	}
+	return buff;
+    }
+}
+
+class SelectDescendentsQuery<T> extends Query<T> {
+
+    Predicate<Expr> pred;
+
+    SelectDescendentsQuery(Predicate<Expr> pred) {
+	this.pred = pred;
+    }
+    
+    ArrayList<Expr> selectNode(Expr e){
+	ArrayList<Expr> buff = new ArrayList<Expr>();
+	if( pred.test(e) ){
+	    buff.add(e);
+	}
+	if( e instanceof ListExpr ){
+	    ListExpr le = (ListExpr)e;
+	    for( Expr c : le.children) {
+		buff.addAll(selectNode(c));
+	    }
+	}
+	return buff;
+    }
+}
+
+class TerminalQuery extends Query<String> {
+
+    @Override
+    ArrayList<Expr> selectNode(Expr e){
+	ArrayList<Expr> buff = new ArrayList<Expr>();
+	buff.add(e);
+	return buff;
+    }
+    @Override
+    ArrayList<String> process(Expr e){
+	ArrayList<String> buff = new ArrayList<String>();
+	buff.add(e.getName());
+	return buff;
+    }
+}
 
 public class GrunUtil {
 

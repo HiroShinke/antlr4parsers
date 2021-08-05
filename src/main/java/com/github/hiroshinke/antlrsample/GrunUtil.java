@@ -13,13 +13,57 @@ import java.util.StringJoiner;
 import java.util.function.Predicate;
 
 
-interface Continuation {
-    ArrayList<String> process(Expr e);
+
+/*
+  imutable path 
+ */
+
+class Path {
+
+    ArrayList<Expr> path;
+
+    Path() {
+	path = new ArrayList<Expr>();
+    }
+
+    Path(Expr e) {
+	this();
+	path.add(e);
+    }
+    
+    private Path(ArrayList<Expr> p){
+	path = p;
+    }
+
+    Expr tail() {
+	return path.get(path.size()-1);
+    }
+
+    Path add(Expr e) {
+	@SuppressWarnings("unchecked")	
+	ArrayList<Expr> p = (ArrayList<Expr>)path.clone();
+	p.add(e);
+	return new Path(p);
+    }
+
+    @Override
+    public String toString(){
+	StringBuffer buff = new StringBuffer();
+	for( Expr e : path ){
+	    if( buff.length() == 0 ){
+		buff.append( e.getName() );
+	    } else {
+		buff.append( "/" );
+		buff.append( e.getName() );		
+	    }
+	}
+	return buff.toString();
+    }
 }
 
 abstract class Query<T> {
 
-    abstract ArrayList<Expr> selectNode(Expr e);    
+    abstract ArrayList<Path> selectNode(Path path);    
     Query<T> continuation;    
 
     Query(){
@@ -30,11 +74,11 @@ abstract class Query<T> {
 	this.continuation = continuation;
     }
 
-    ArrayList<T> process(Expr e){
-	ArrayList<Expr> es = selectNode(e);
+    ArrayList<T> process(Path path){
+	ArrayList<Path> ps = selectNode(path);
 	ArrayList<T> buff = new ArrayList<T>();
-	for( Expr c: es) {
-	    buff.addAll(continuation.process(c));
+	for( Path p: ps) {
+	    buff.addAll(continuation.process(p));
 	}
 	return buff;
     }
@@ -42,16 +86,16 @@ abstract class Query<T> {
 
 class SelectSelfQuery<T> extends Query<T> {
 
-    Predicate<Expr> pred;
+    Predicate<Path> pred;
 
-    SelectSelfQuery(Predicate<Expr> pred) {
+    SelectSelfQuery(Predicate<Path> pred) {
 	this.pred = pred;
     }
     
-    ArrayList<Expr> selectNode(Expr e){
-	ArrayList<Expr> buff = new ArrayList<Expr>();
-	if( pred.test(e) ){
-	    buff.add(e);
+    ArrayList<Path> selectNode(Path p){
+	ArrayList<Path> buff = new ArrayList<Path>();
+	if( pred.test(p) ){
+	    buff.add(p);
 	}
 	return buff;
     }
@@ -59,21 +103,22 @@ class SelectSelfQuery<T> extends Query<T> {
 
 class SelectDescendentsQuery<T> extends Query<T> {
 
-    Predicate<Expr> pred;
+    Predicate<Path> pred;
 
-    SelectDescendentsQuery(Predicate<Expr> pred) {
+    SelectDescendentsQuery(Predicate<Path> pred) {
 	this.pred = pred;
     }
     
-    ArrayList<Expr> selectNode(Expr e){
-	ArrayList<Expr> buff = new ArrayList<Expr>();
-	if( pred.test(e) ){
-	    buff.add(e);
+    ArrayList<Path> selectNode(Path p){
+	ArrayList<Path> buff = new ArrayList<Path>();
+	if( pred.test(p) ){
+	    buff.add(p);
 	}
+	Expr e = p.tail();
 	if( e instanceof ListExpr ){
 	    ListExpr le = (ListExpr)e;
 	    for( Expr c : le.children) {
-		buff.addAll(selectNode(c));
+		buff.addAll(selectNode(p.add(c)));
 	    }
 	}
 	return buff;
@@ -83,15 +128,15 @@ class SelectDescendentsQuery<T> extends Query<T> {
 class TerminalQuery extends Query<String> {
 
     @Override
-    ArrayList<Expr> selectNode(Expr e){
-	ArrayList<Expr> buff = new ArrayList<Expr>();
-	buff.add(e);
+    ArrayList<Path> selectNode(Path p){
+	ArrayList<Path> buff = new ArrayList<Path>();
+	buff.add(p);
 	return buff;
     }
     @Override
-    ArrayList<String> process(Expr e){
+    ArrayList<String> process(Path p){
 	ArrayList<String> buff = new ArrayList<String>();
-	buff.add(e.getName());
+	buff.add(p.toString());
 	return buff;
     }
 }
@@ -117,9 +162,10 @@ public class GrunUtil {
 	}
     }
 
-    static Predicate<Expr> specToPred(String spec) {
+    static Predicate<Path> specToPred(String spec) {
 
-	return ( (e) -> {
+	return ( (p) -> {
+		Expr e = p.tail();
 		if( e.getName().equals(spec) ){
 			return true;
 		    } else {
@@ -132,36 +178,10 @@ public class GrunUtil {
 
     static ArrayList<String> findTag(Expr e, String spec) {
 
-	return findBase(e,
-			specToPred(spec),
-			(x) -> {
-			    ArrayList<String> buff = new ArrayList<String>();
-			    buff.add(x.getName());
-			    return buff;
-			}
-			);
+	Query<String> q = new SelectDescendentsQuery<String>( specToPred(spec) );
+	q.continuation = new TerminalQuery( );
+	return q.process(new Path(e));
     }
 
-    static ArrayList<String> findBase(Expr e,
-				      Predicate<Expr> pred,
-				      Continuation cont) {
-
-	ArrayList<String> buff = new ArrayList<String>();
-	
-	if( pred.test(e) ){
-	    buff.addAll(cont.process(e));
-	}
-
-	if( e instanceof ListExpr ){
-	    ListExpr le = (ListExpr)e;
-	    for( Expr c : le.children) {
-		for( String ans : findBase(c,pred,cont) ){
-		    buff.add( le.tag + "/" + ans );
-		}
-	    }
-	}
-	return buff;
-    }
-    
 }
 

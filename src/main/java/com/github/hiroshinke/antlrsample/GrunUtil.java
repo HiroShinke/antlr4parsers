@@ -101,6 +101,30 @@ class SelectSelfQuery<T> extends Query<T> {
     }
 }
 
+class SelectChildrenQuery<T> extends Query<T> {
+
+    Predicate<Path> pred;
+
+    SelectChildrenQuery(Predicate<Path> pred) {
+	this.pred = pred;
+    }
+    
+    ArrayList<Path> selectNode(Path p){
+	ArrayList<Path> buff = new ArrayList<Path>();
+	Expr e = p.tail();
+	if( e instanceof ListExpr ){
+	    ListExpr le = (ListExpr)e;
+	    for( Expr c : le.children) {
+		Path cp = p.add(c);
+		if( pred.test(cp) ){
+		    buff.add(cp);
+		}
+	    }
+	}
+	return buff;
+    }
+}
+
 class SelectDescendentsQuery<T> extends Query<T> {
 
     Predicate<Path> pred;
@@ -176,12 +200,79 @@ public class GrunUtil {
 	    
     }
 
-    static ArrayList<String> findTag(Expr e, String spec) {
+    static ArrayList<String> findPath(Expr e, String path) {
 
-	Query<String> q = new SelectDescendentsQuery<String>( specToPred(spec) );
-	q.continuation = new TerminalQuery( );
-	return q.process(new Path(e));
+	Query<String> root    = null;
+	Query<String> current = null;
+	int i = 0;
+	ArrayList<String> spec = parsePath(path);
+
+	while ( i < spec.size() ){
+	    String s = spec.get(i);
+	    if( s.equals("//") ){
+		Query<String> q =
+		    new SelectDescendentsQuery<String>
+		    (
+		     specToPred(spec.get(i+1))
+		     );
+		if( root == null ){
+		    root = q;
+		} else if( current != null ){
+		    current.continuation = q;
+		} 
+		current = q;
+	    }
+	    else if( s.equals("/") ){
+		Query<String> q =
+		    new SelectDescendentsQuery<String>
+		    (
+		     specToPred(spec.get(i+1))
+		     );
+		if( root == null ){
+		    root = q;
+		} else if( current != null ){
+		    current.continuation = q;
+		} 
+	    }
+	    i+=2;
+	}
+
+	current.continuation = new TerminalQuery( );
+	return root.process(new Path(e));
     }
 
+    static ArrayList<String> parsePath (String spec) {
+
+	int pos = 0;
+	int length = spec.length();
+
+	ArrayList<String> buff = new ArrayList<String>();
+	StringBuffer sb = new StringBuffer();
+	while( pos < length ){
+	    char c = spec.charAt(pos);
+	    if( c == '/' ){
+		if( sb.length() > 0){
+		    buff.add(sb.toString());
+		    sb = new StringBuffer();		    
+		}
+		char d = pos+1 < length ? spec.charAt(pos+1) : '\0';
+		if( d == '/' ){
+		    buff.add("//");
+		    pos++;
+		} else {
+		    buff.add("/");
+		}
+	    }
+	    else {
+		sb.append(c);
+	    }
+	    pos++;
+	}
+	if( sb.length() > 0){
+	    buff.add(sb.toString());
+	}
+	return buff;
+    }
+    
 }
 

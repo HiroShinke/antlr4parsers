@@ -224,7 +224,7 @@ public class GrunUtil {
 	    }
 	    else if( s.equals("/") ){
 		Query<String> q =
-		    new SelectDescendentsQuery<String>
+		    new SelectChildrenQuery<String>
 		    (
 		     specToPred(spec.get(i+1))
 		     );
@@ -232,7 +232,8 @@ public class GrunUtil {
 		    root = q;
 		} else if( current != null ){
 		    current.continuation = q;
-		} 
+		}
+		current = q;		
 	    }
 	    i+=2;
 	}
@@ -271,6 +272,7 @@ public class GrunUtil {
 	if( sb.length() > 0){
 	    buff.add(sb.toString());
 	}
+
 	return buff;
     }
     

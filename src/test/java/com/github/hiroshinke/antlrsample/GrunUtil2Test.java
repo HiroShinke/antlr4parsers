@@ -47,7 +47,7 @@ public class GrunUtil2Test
     {
 	Expr e = readExpr("(xxx (aaa 1))");
 	ArrayList<String> r  = GrunUtil.findPath(e,"//xxx");
-	System.out.println( "r=" + r );
+	//System.out.println( "r=" + r );
 	assertTrue( r.equals(strList("xxx")) );
     }
 
@@ -56,7 +56,7 @@ public class GrunUtil2Test
     {
 	Expr e = readExpr("(xxx (aaa 1))");
 	ArrayList<String> r = GrunUtil.findPath(e,"//aaa");
-	System.out.println( "r=" + r );	
+	//System.out.println( "r=" + r );	
 	assertTrue( r.equals(strList("xxx/aaa")) );
     }
 
@@ -65,7 +65,7 @@ public class GrunUtil2Test
     {
 	Expr e = readExpr("(xxx (aaa 1) (aaa 2))");
 	ArrayList<String> r = GrunUtil.findPath(e,"//aaa");
-	System.out.println( "r=" + r );	
+	//System.out.println( "r=" + r );	
 	assertTrue( r.equals(strList("xxx/aaa","xxx/aaa")) );
     }
 
@@ -74,7 +74,7 @@ public class GrunUtil2Test
     {
 	Expr e = readExpr("(xxx (aaa 1) (aaa 2))");
 	ArrayList<String> r = GrunUtil.findPath(e,"//1");
-	System.out.println( "r=" + r );	
+	//System.out.println( "r=" + r );	
 	assertTrue( r.equals(strList("xxx/aaa/1")) );
     }
 
@@ -83,11 +83,29 @@ public class GrunUtil2Test
     {
 	Expr e = readExpr("(xxx (aaa 1) (aaa (bbb (ccc 1))))");
 	ArrayList<String> r = GrunUtil.findPath(e,"//1");
-	System.out.println( "r=" + r );	
+	//System.out.println( "r=" + r );	
 	assertTrue( r.equals(strList("xxx/aaa/1","xxx/aaa/bbb/ccc/1")) );
     }
 
-    
 
+    @Test
+    public void testApp6()
+    {
+	Expr e = readExpr("(xxx (aaa 1) (aaa (bbb (ccc 1))))");
+	ArrayList<String> r = GrunUtil.findPath(e,"//aaa/bbb/ccc/1");
+	//System.out.println( "r=" + r );	
+	assertTrue( r.equals(strList("xxx/aaa/bbb/ccc/1")) );
+    }
+
+    @Test
+    public void testApp7()
+    {
+	Expr e = readExpr("(xxx (aaa 1) (aaa (bbb (ccc 1))))");
+	ArrayList<String> r = GrunUtil.findPath(e,"//aaa//ccc/1");
+	//System.out.println( "r=" + r );	
+	assertTrue( r.equals(strList("xxx/aaa/bbb/ccc/1")) );
+    }
+
+    
     
 }

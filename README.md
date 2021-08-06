@@ -1,7 +1,6 @@
-# antlrsample
-A Sample project for antlr4 and maven.
+# grunutil
+A Utility for analyzing Antlr4 Grun's lisp style tree output.
 
-This can be used as a template for projects using antlr4 generated parser.
+Support XPath like query language for Grun tree.
 
-This includes a simple application for lisp style tree generation,
-and a shell to run grun (TestRig) utilities.
+

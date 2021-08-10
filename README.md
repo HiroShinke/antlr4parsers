@@ -1,6 +1,5 @@
-# grunutil
-A Utility for analyzing Antlr4 Grun's lisp style tree output.
+# antlr4experiment
+A experiment for analyzing Antlr4 output. 
 
-Support XPath like query language for Grun tree.
-
+Test XPath facilities etc. 
 

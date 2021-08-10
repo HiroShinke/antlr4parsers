@@ -165,6 +165,7 @@ class TerminalQuery extends Query<String> {
     }
 }
 
+
 public class GrunUtil {
 
     String text;
@@ -200,14 +201,18 @@ public class GrunUtil {
 	    
     }
 
-    static ArrayList<String> findPath(Expr e, String path) {
+    static class CompileResult {
+	Query<String> q;
+	int pos;
+	CompileResult(Query<String> q,int pos) {
+	    this.q   = q;
+	    this.pos = pos;
+	}
+    }
+    
+    static CompileResult compile(ArrayList<String> spec, int i) {
 
-	Query<String> root    = null;
-	Query<String> current = null;
-	int i = 0;
-	ArrayList<String> spec = parsePath(path);
-
-	while ( i < spec.size() ){
+	if( i < spec.size() ){
 	    String s = spec.get(i);
 	    if( s.equals("//") ){
 		Query<String> q =
@@ -215,12 +220,7 @@ public class GrunUtil {
 		    (
 		     specToPred(spec.get(i+1))
 		     );
-		if( root == null ){
-		    root = q;
-		} else if( current != null ){
-		    current.continuation = q;
-		} 
-		current = q;
+		return new CompileResult(q,i+2);
 	    }
 	    else if( s.equals("/") ){
 		Query<String> q =
@@ -228,14 +228,44 @@ public class GrunUtil {
 		    (
 		     specToPred(spec.get(i+1))
 		     );
-		if( root == null ){
-		    root = q;
-		} else if( current != null ){
-		    current.continuation = q;
-		}
-		current = q;		
+		return new CompileResult(q,i+2);
 	    }
-	    i+=2;
+	    else {
+		Query<String> q =
+		    new SelectSelfQuery<String>
+		    (
+		     specToPred(spec.get(i))
+		     );
+		return new CompileResult(q,i+1);
+	    }
+	} else {
+	    return null;
+	}
+    }
+
+    static ArrayList<String> findPath(Expr e, String path) {
+
+	Query<String> root    = null;
+	Query<String> current = null;
+
+	ArrayList<String> spec = parsePath(path);
+
+	int pos = 0;
+	while( true ) {
+
+	    CompileResult r = compile(spec,pos);
+
+	    if( r != null ) {
+		if( root == null ){
+		    root = r.q;
+		} else if( current != null ){
+		    current.continuation = r.q;
+		} 
+		current = r.q;
+		pos = r.pos;
+	    } else {
+		break;
+	    }
 	}
 
 	current.continuation = new TerminalQuery( );

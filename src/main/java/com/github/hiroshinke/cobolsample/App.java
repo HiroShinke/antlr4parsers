@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import java.util.function.Function;
+import java.util.function.Consumer;
 
 
 class App {
@@ -79,28 +80,27 @@ class App {
         ParseTree tree = parser.startRule();
 	String xpath = "//callStatement"; // get children of blockStatement
 
-	Collection<ParseTree> calls = XPath.findAll(tree,xpath,parser);
-	for( ParseTree t : calls ){
+	xpathSubTreesDo
+	    (
+	     tree,xpath,parser,
+	     (t) -> {
 
-	    String callName = "";
+		 ParseTreePattern pat =
+		     patternMatcher(parser,
+				    "callStatement",
+				    "CALL <foo:literal> <goo:callUsingPhrase>");
+		 ParseTreeMatch m = pat.match(t);
+		 String callName = m.succeeded() ? m.get("foo").getText() : "";
 
-	    String treePattern = "CALL <foo:literal> <goo:callUsingPhrase>";
-	    ParseTreePattern pat = patternMatcher(parser,
-						  "callStatement",
-						  treePattern);
-	    ParseTreeMatch m = pat.match(t);
-	    if( m.succeeded() ){
-		callName = m.get("foo").getText();
-	    }
-	    
-	    String xpathParameter = "*//callByReference";
-	    Collection<ParseTree> params = XPath.findAll(t,xpathParameter,parser);
-	    for( ParseTree p : params ){
-		System.out.printf("call : %s using : %s\n",
-				  callName ,
-				  p.getText() );
-	    }
-	}
+		 xpathSubTreesDo
+		     (
+		      t,"*//callByReference",parser,
+		      (p) -> {
+			  System.out.printf("call : %s using : %s\n",
+					    callName ,
+					    p.getText() );
+		      });
+	     });
     }
 
     static void printDataDescriptionInfo(Cobol85Parser parser){
@@ -108,9 +108,12 @@ class App {
 	parser.reset();
         ParseTree tree = parser.startRule();
 
-	String xpath = "//dataDescriptionEntryFormat1";
+	String xpath = "//dataDescriptionEntry/*";
 	String xpathLevel = "*/INTEGERLITERAL";
+	String xpathLevel66 = "*/LEVEL_NUMBER_66";
+	String xpathLevel88 = "*/LEVEL_NUMBER_88";
 	String xpathName    = "*/dataName";
+	String xpathConditionName = "*/conditionName";
 	String xpathPicture = "*/dataPictureClause";
 	String xpathUsage   = "*/dataUsageClause";	
 	String xpathValue   = "*/dataValueClause";	
@@ -119,9 +122,19 @@ class App {
 	for( ParseTree e : entries ){
 
 	    String level = xpathSubTreeText(e,xpathLevel,parser);
+	    if( level.isEmpty() ){
+		level = xpathSubTreeText(e,xpathLevel88,parser);
+	    }
+	    if( level.isEmpty() ){
+		level = xpathSubTreeText(e,xpathLevel66,parser);
+	    }
 	    String name  = xpathSubTreeText(e,xpathName,parser);
+	    if( name.isEmpty() ){
+		name  = xpathSubTreeText(e,xpathConditionName,parser);		
+	    }
+	    
 	    String pict  =
-		xpathSubTreeCont
+		xpathSubTreesCont
 		(e,xpathPicture,parser,
 		 (subs) -> {
 		    for(ParseTree t: subs) {
@@ -139,7 +152,7 @@ class App {
 	    String usage  = xpathSubTreeText(e,xpathUsage,parser);
 
 	    String value = 
-		xpathSubTreeCont
+		xpathSubTreesCont
 		(e,xpathValue,parser,
 		 (subs) -> {
 		    for(ParseTree t: subs) {
@@ -188,15 +201,26 @@ class App {
 	}
     }
 
-    static <T> T xpathSubTreeCont(ParseTree tree,
-				  String xpath,
-				  Parser parser,
-				  Function<Collection<ParseTree>,T> cont) {
+    static <T> T xpathSubTreesCont(ParseTree tree,
+				   String xpath,
+				   Parser parser,
+				   Function<Collection<ParseTree>,T> cont) {
 
 	Collection<ParseTree> subs = XPath.findAll(tree,xpath,parser);
 	return cont.apply(subs);
     }
 
+    static <T> void xpathSubTreesDo(ParseTree tree,
+				    String xpath,
+				    Parser parser,
+				    Consumer<ParseTree> cont) {
+	
+	Collection<ParseTree> subs = XPath.findAll(tree,xpath,parser);
+	for( ParseTree t : subs ){
+	    cont.accept(t);
+	}
+    }
+    
 
     static ParseTreePattern patternMatcher(Parser parser,
 					   String ruleName,

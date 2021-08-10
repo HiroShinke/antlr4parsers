@@ -22,6 +22,9 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import java.util.function.Function;
+
+
 class App {
 
     public static void main(String[] args) throws Exception {
@@ -114,51 +117,56 @@ class App {
 	
 	Collection<ParseTree> entries = XPath.findAll(tree,xpath,parser);
 	for( ParseTree e : entries ){
-	    System.out.println("entry = " + e.getText());
-	    ParseTree sub ;
-	    sub = xpathGetSubTree(e,xpathLevel,parser);
-	    if( sub != null ){
-		System.out.println("level = " + sub.getText());
-	    }
-	    sub = xpathGetSubTree(e,xpathName,parser);
-	    if( sub != null ){
-		System.out.println("name = " + sub.getText());
-	    }
-	    sub = xpathGetSubTree(e,xpathPicture,parser);
-	    if( sub != null ){
-		// System.out.println("picture = " + sub.getText());
-		ParseTreePattern pat = patternMatcher(parser,
-						      "dataPictureClause",
-						      "<PIC> <foo:pictureString>");
-		ParseTreeMatch m = pat.match(sub);
-		if( m.succeeded() ){
-		    String pic = m.get("foo").getText();
-		    System.out.println("picture = " + pic);
-		}
-	    }
-	    sub = xpathGetSubTree(e,xpathUsage,parser);
-	    if( sub != null ){
-		System.out.println("usage = " + sub.getText());
-	    }
-	    sub = xpathGetSubTree(e,xpathValue,parser);
-	    if( sub != null ){
-		// System.out.println("value = " + sub.getText());
-		//System.out.println("picture = " + sub.toStringTree(parser));
-		ParseTreePattern pat = patternMatcher(parser,
-						      "dataValueClause",
-						      "<VALUE> <foo:dataValueIntervalFrom>");
-		ParseTreeMatch m = pat.match(sub);
-		if( m.succeeded() ){
-		    String value = m.get("foo").getText();
-		    System.out.println("value = " + value);
-		}
-	    }
+
+	    String level = xpathSubTreeText(e,xpathLevel,parser);
+	    String name  = xpathSubTreeText(e,xpathName,parser);
+	    String pict  =
+		xpathSubTreeCont
+		(e,xpathPicture,parser,
+		 (subs) -> {
+		    for(ParseTree t: subs) {
+			ParseTreePattern pat = patternMatcher(parser,
+							      "dataPictureClause",
+							      "<PIC> <foo:pictureString>");
+			ParseTreeMatch m = pat.match(t);
+			if( m.succeeded() ){
+			    return m.get("foo").getText();
+			} 
+		    }
+		    return "";
+		});
+		 
+	    String usage  = xpathSubTreeText(e,xpathUsage,parser);
+
+	    String value = 
+		xpathSubTreeCont
+		(e,xpathValue,parser,
+		 (subs) -> {
+		    for(ParseTree t: subs) {
+			ParseTreePattern pat =
+			    patternMatcher(parser,
+					   "dataValueClause",
+					   "<VALUE> <foo:dataValueIntervalFrom>");
+			ParseTreeMatch m = pat.match(t);
+			if( m.succeeded() ){
+			    return m.get("foo").getText();
+			} 
+		    }
+		    return "";
+		});
+
+	    System.out.println("dataDescription: " + String.join(",",
+								 level,
+								 name,
+								 pict,
+								 usage,
+								 value));
 	}
     }
 
-    static ParseTree xpathGetSubTree(ParseTree tree,
-				     String xpath,
-				     Parser parser) {
+    static ParseTree xpathSubTree(ParseTree tree,
+				  String xpath,
+				  Parser parser) {
 	
 	Collection<ParseTree> subs = XPath.findAll(tree,xpath,parser);
 	for (ParseTree s: subs) {
@@ -166,6 +174,29 @@ class App {
 	}
 	return null;
     }
+
+
+    static String xpathSubTreeText(ParseTree tree,
+				   String xpath,
+				   Parser parser) {
+	
+	ParseTree ret = xpathSubTree(tree,xpath,parser);
+	if( ret != null ){
+	    return ret.getText();
+	} else {
+	    return "";
+	}
+    }
+
+    static <T> T xpathSubTreeCont(ParseTree tree,
+				  String xpath,
+				  Parser parser,
+				  Function<Collection<ParseTree>,T> cont) {
+
+	Collection<ParseTree> subs = XPath.findAll(tree,xpath,parser);
+	return cont.apply(subs);
+    }
+
 
     static ParseTreePattern patternMatcher(Parser parser,
 					   String ruleName,

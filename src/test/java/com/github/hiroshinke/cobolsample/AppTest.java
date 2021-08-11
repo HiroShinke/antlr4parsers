@@ -130,4 +130,24 @@ public class AppTest
 	assertThat(value,is("01"));	
     }
 
+    @Test
+    public void testApp7() throws Exception 
+    {
+	java.util.regex.Pattern pat = App.pattern;
+	java.util.regex.Matcher m   = pat.matcher("012345-  \"xxxxx");
+	assertThat(m.find(),is(true));
+	assertThat(m.end(),is(10));	
+
+	m   = pat.matcher("012345-  \'xxxxx");
+	assertThat(m.find(),is(true));
+	assertThat(m.end(),is(10));	
+    }
+
+
+
+
+    
+
+
+    
 }

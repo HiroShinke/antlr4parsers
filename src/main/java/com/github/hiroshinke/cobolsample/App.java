@@ -22,8 +22,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import java.util.function.Function;
-import java.util.function.Consumer;
+import static com.github.hiroshinke.cobolsample.AntlrUtil.*;
 
 
 class App {
@@ -37,18 +36,24 @@ class App {
 	    String filePath = args[0];
 	    File fileInput = new File(filePath);
 	    is = new FileInputStream(fileInput);
-	} 
-	    
+	}
+
+	Cobol85Parser parser = createParser(is);
+	// System.out.println(tree.toStringTree(parser));
+
+	printCallInfo(parser);
+	printMoveInfo(parser);
+	printDataDescriptionInfo(parser);
+    }
+
+    public static Cobol85Parser createParser(InputStream is) throws Exception {
+    
         ANTLRInputStream input = new ANTLRInputStream(is); 
         Cobol85Lexer lexer = new Cobol85Lexer(input); 
         CommonTokenStream tokens = new CommonTokenStream(lexer); 
         Cobol85Parser parser = new Cobol85Parser(tokens);
 
-	// System.out.println(tree.toStringTree(parser));
-	// printMoveInfo(parser);
-	printCallInfo(parser);
-	printMoveInfo(parser);
-	printDataDescriptionInfo(parser);
+	return parser;
     }
 
     static void printMoveInfo(Cobol85Parser parser){
@@ -177,82 +182,5 @@ class App {
 	}
     }
 
-    static ParseTree xpathSubTree(ParseTree tree,
-				  String xpath,
-				  Parser parser) {
-	
-	Collection<ParseTree> subs = XPath.findAll(tree,xpath,parser);
-	for (ParseTree s: subs) {
-	    return s;
-	}
-	return null;
-    }
-
-
-    static String xpathSubTreeText(ParseTree tree,
-				   String xpath,
-				   Parser parser) {
-	
-	ParseTree ret = xpathSubTree(tree,xpath,parser);
-	if( ret != null ){
-	    return ret.getText();
-	} else {
-	    return "";
-	}
-    }
-
-    static <T> T xpathSubTreesCont(ParseTree tree,
-				   String xpath,
-				   Parser parser,
-				   Function<Collection<ParseTree>,T> cont) {
-
-	Collection<ParseTree> subs = XPath.findAll(tree,xpath,parser);
-	return cont.apply(subs);
-    }
-
-    static <T> void xpathSubTreesDo(ParseTree tree,
-				    String xpath,
-				    Parser parser,
-				    Consumer<ParseTree> cont) {
-	
-	Collection<ParseTree> subs = XPath.findAll(tree,xpath,parser);
-	for( ParseTree t : subs ){
-	    cont.accept(t);
-	}
-    }
-    
-
-    static ParseTreePattern patternMatcher(Parser parser,
-					   String ruleName,
-					   String pattern){
-	return parser.compileParseTreePattern(
-	    pattern,
-	    parser.getRuleIndex(ruleName));
-    }
-
-
-    static List<String> prettyStringHelper(ParseTree tree) {
-
-	ArrayList<String> buff = new ArrayList<String>();
-	
-	int n = tree.getChildCount();
-	if( n == 0 ){
-	    buff.add( tree.getText() );
-	}
-	else {
-	    for(int i=0; i<n; i++){
-		buff.addAll(prettyStringHelper(tree.getChild(i)));
-	    }
-	}
-	return buff;
-    }
-
-
-    static String prettyString(ParseTree tree) {
-
-	List<String> buff = prettyStringHelper(tree);
-	return String.join(" ",buff);
-    }
-    
 }
 

@@ -99,8 +99,14 @@ class App {
 
 	String line;
 	while( (line = rd.readLine()) != null ){
-	    if( line.charAt(6) == ' ' ){
-		buff.append(line.substring(7,72));
+
+	    int len = line.length();
+	    int cutoff = len < 72 ? len : 72;
+
+	    if( len < 7 ){
+		;
+	    } else if( line.charAt(6) == ' ' ){
+		buff.append(line.substring(7,cutoff));
 		buff.append('\n');
 	    }
 	    else if( line.charAt(6) == '-' ){
@@ -109,9 +115,9 @@ class App {
 		Matcher m = pattern.matcher(line);
 		if( m.find() ){
 		    int e = m.end();
-		    buff.append(line.substring(e,72));
+		    buff.append(line.substring(e,cutoff));
 		} else {
-		    buff.append(line.substring(7,72));
+		    buff.append(line.substring(7,cutoff));
 		}
 		buff.append('\n');
 	    }

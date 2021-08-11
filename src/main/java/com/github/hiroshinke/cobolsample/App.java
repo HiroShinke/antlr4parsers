@@ -87,7 +87,7 @@ class App {
 
 	xpathSubTreesDo
 	    (
-	     tree,xpath,parser,
+	     parser,tree,xpath,
 	     (t) -> {
 
 		 ParseTreePattern pat =
@@ -99,7 +99,7 @@ class App {
 
 		 xpathSubTreesDo
 		     (
-		      t,"*//callByReference",parser,
+		      parser,t,"*//callByReference",
 		      (p) -> {
 			  System.out.printf("call : %s using : %s\n",
 					    callName ,
@@ -113,65 +113,24 @@ class App {
 	parser.reset();
         ParseTree tree = parser.startRule();
 
-	String xpath = "//dataDescriptionEntry/*";
-	String xpathLevel = "*/INTEGERLITERAL";
-	String xpathLevel66 = "*/LEVEL_NUMBER_66";
-	String xpathLevel88 = "*/LEVEL_NUMBER_88";
-	String xpathName    = "*/dataName";
-	String xpathConditionName = "*/conditionName";
-	String xpathPicture = "*/dataPictureClause";
-	String xpathUsage   = "*/dataUsageClause";	
-	String xpathValue   = "*/dataValueClause";	
-	
-	Collection<ParseTree> entries = XPath.findAll(tree,xpath,parser);
+	Collection<ParseTree> entries = XPath.findAll(tree,
+						      "//dataDescriptionEntry/*",
+						      parser);
 	for( ParseTree e : entries ){
 
-	    String level = xpathSubTreeText(e,xpathLevel,parser);
-	    if( level.isEmpty() ){
-		level = xpathSubTreeText(e,xpathLevel88,parser);
-	    }
-	    if( level.isEmpty() ){
-		level = xpathSubTreeText(e,xpathLevel66,parser);
-	    }
-	    String name  = xpathSubTreeText(e,xpathName,parser);
-	    if( name.isEmpty() ){
-		name  = xpathSubTreeText(e,xpathConditionName,parser);		
-	    }
-	    
-	    String pict  =
-		xpathSubTreesCont
-		(e,xpathPicture,parser,
-		 (subs) -> {
-		    for(ParseTree t: subs) {
-			ParseTreePattern pat = patternMatcher(parser,
-							      "dataPictureClause",
-							      "<PIC> <foo:pictureString>");
-			ParseTreeMatch m = pat.match(t);
-			if( m.succeeded() ){
-			    return m.get("foo").getText();
-			} 
-		    }
-		    return "";
-		});
-		 
-	    String usage  = xpathSubTreeText(e,xpathUsage,parser);
+	    String level = xpathSubTreeText(parser,e,
+					    List.of("*/INTEGERLITERAL",
+						    "*/LEVEL_NUMBER_88",
+						    "*/LEVEL_NUMBER_66"));
+	    String name  = xpathSubTreeText(parser,e,
+					    List.of("*/dataName",
+						    "*/conditionName"));
 
-	    String value = 
-		xpathSubTreesCont
-		(e,xpathValue,parser,
-		 (subs) -> {
-		    for(ParseTree t: subs) {
-			ParseTreePattern pat =
-			    patternMatcher(parser,
-					   "dataValueClause",
-					   "<VALUE> <foo:dataValueIntervalFrom>");
-			ParseTreeMatch m = pat.match(t);
-			if( m.succeeded() ){
-			    return m.get("foo").getText();
-			} 
-		    }
-		    return "";
-		});
+	    String pict  = xpathSubTreeText(parser,e,"*//pictureString");
+		 
+	    String usage = xpathSubTreeText(parser,e,"*/dataUsageClause");
+
+	    String value = xpathSubTreeText(parser,e,"*//dataValueIntervalFrom");
 
 	    System.out.println("dataDescription: " + String.join(",",
 								 level,

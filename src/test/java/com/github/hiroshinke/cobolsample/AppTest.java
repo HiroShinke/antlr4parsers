@@ -12,6 +12,7 @@ import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.antlr.v4.runtime.tree.xpath.XPath;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -32,24 +33,16 @@ public class AppTest
 	InputStream is = toInputStream("01 XXXX PIC 9(10). ");
 	Cobol85Parser parser = App.createParser(is);
 	ParseTree tree = parser.dataDescriptionEntry();
-	String xpath = "//dataDescriptionEntry/*";
 	String value = AntlrUtil.xpathSubTreesCont
-	    (
-	     tree,
-	     xpath,
-	     parser,
+	    (parser,tree,"//dataDescriptionEntry/*",
 	     (entries) -> {
 		 for(ParseTree e: entries){
-		     String name2 = AntlrUtil.xpathSubTreeText
-			 (e,
-			  "*/dataName",
-			  parser
-			  );
-		     return name2;
+		     return AntlrUtil.xpathSubTreeText(parser,e,
+						       "*/INTEGERLITERAL");
 		 }
 		 return null;
 	     });
-	assertThat(value,is("XXXX"));			     
+	assertThat(value,is("01"));			     
     }
 
     @Test
@@ -59,10 +52,10 @@ public class AppTest
 	Cobol85Parser parser = App.createParser(is);
 	ParseTree tree = parser.dataDescriptionEntry();
 	String xpath = "//dataDescriptionEntry/*";
-	Collection<ParseTree> es = AntlrUtil.xpathSubTrees(tree,xpath,parser);
+	Collection<ParseTree> es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
 	String value = "";
 	for(ParseTree e: es) {
-	    value = AntlrUtil.xpathSubTreeText(e,"*/dataName",parser);
+	    value = AntlrUtil.xpathSubTreeText(parser,e,"*/dataName");
 	}
 	assertThat(value,is("XXXX"));		
     }
@@ -74,10 +67,10 @@ public class AppTest
 	Cobol85Parser parser = App.createParser(is);
 	ParseTree tree = parser.dataDescriptionEntry();
 	String xpath = "//dataDescriptionEntry/*";
-	Collection<ParseTree> es = AntlrUtil.xpathSubTrees(tree,xpath,parser);
+	Collection<ParseTree> es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
 	String value = "";
 	for(ParseTree e: es) {
-	    value = AntlrUtil.xpathSubTreeText(e,"*//pictureString",parser);
+	    value = AntlrUtil.xpathSubTreeText(parser,e,"*//pictureString");
 	}
 	assertThat(value,is("9(10)"));	
     }
@@ -90,14 +83,14 @@ public class AppTest
 	Cobol85Parser parser = App.createParser(is);
 	ParseTree tree = parser.dataDescriptionEntry();
 	String xpath = "//dataDescriptionEntry/*";
-	Collection<ParseTree> es = AntlrUtil.xpathSubTrees(tree,xpath,parser);
+	Collection<ParseTree> es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
 	String value = "";
 	for(ParseTree e: es) {
-	    value = AntlrUtil.xpathSubTreePatternText(e,
+	    value = AntlrUtil.xpathSubTreePatternText(parser,
+						      e,
 						      "*//dataPictureClause",
 						      "<PIC> <foo:pictureString>",
-						      "foo",
-						      parser);
+						      "foo");
 	}
 	assertThat(value,is("9(10)"));
     }
@@ -110,15 +103,31 @@ public class AppTest
 	Cobol85Parser parser = App.createParser(is);
 	ParseTree tree = parser.dataDescriptionEntry();
 	String xpath = "//dataDescriptionEntry/*";
-	Collection<ParseTree> es = AntlrUtil.xpathSubTrees(tree,xpath,parser);
+	Collection<ParseTree> es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
 	String value = "";
 	for(ParseTree e: es) {
-	    value = AntlrUtil.xpathSubTreeText(e,"*/LEVEL_NUMBER_88",parser);
+	    value = AntlrUtil.xpathSubTreeText(parser,e,"*/LEVEL_NUMBER_88");
 	}
 	assertThat(value,is("88"));	
     }
 
+    @Test
+    public void testApp6() throws Exception 
+    {
+	InputStream is = toInputStream("01 XXXX PIC 9(10). ");
+	Cobol85Parser parser = App.createParser(is);
+	ParseTree tree = parser.dataDescriptionEntry();
+	String xpath = "//dataDescriptionEntry/*";
+	Collection<ParseTree> es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
+	String value = "";
+	for(ParseTree e: es) {
+	    value = AntlrUtil.xpathSubTreeText
+		(parser,
+		 e,
+		 List.of("*/INTEGERLITERAL","*/LEVEL_NUMBER_88")
+		 );
+	}
+	assertThat(value,is("01"));	
+    }
 
-    
-    
 }

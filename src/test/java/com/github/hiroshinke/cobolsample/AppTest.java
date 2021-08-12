@@ -17,6 +17,8 @@ import java.util.List;
 import org.antlr.v4.runtime.tree.xpath.XPath;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import static com.github.hiroshinke.cobolsample.ParserCommon.pattern;
+
 /**
  * Unit test for simple App.
  */
@@ -133,7 +135,7 @@ public class AppTest
     @Test
     public void testApp7() throws Exception 
     {
-	java.util.regex.Pattern pat = App.pattern;
+	java.util.regex.Pattern pat = pattern;
 	java.util.regex.Matcher m   = pat.matcher("012345-  \"xxxxx");
 	assertThat(m.find(),is(true));
 	assertThat(m.end(),is(10));	

@@ -5,14 +5,19 @@ use autodie qw(open);
 
 my $fh;
 
-mkdir("NIST");
+-d "MIST" || mkdir("NIST");
 
 while( my $l = <> ){
     if( $l =~ /^CCVS85/ ){
-	next;
+	;
     }
-    elsif( my ($p) = ( $l =~ /^\*HEADER,COBOL,(\w+)/ ) ){
-	open($fh,">","NIST/$p.cbl");
+    elsif( $l =~ /^\*END-OF/ ){
+	close($fh);
+	# undef $fh;
+    }
+    elsif( my ($lib,$p) = ( $l =~ /^\*HEADER,(\w+),(\w+)/ ) ){
+	-d "NIST/$lib" || mkdir("NIST/$lib");
+	open($fh,">","NIST/$lib/$p.cbl");
     }
     else {
 	print $fh $l

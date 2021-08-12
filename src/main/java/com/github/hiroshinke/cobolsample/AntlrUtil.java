@@ -24,9 +24,9 @@ import java.util.stream.Collectors;
 public class AntlrUtil {
 
 
-    static ParseTree xpathSubTree(Parser parser,
-				  ParseTree tree,
-				  String xpath){
+    public static ParseTree xpathSubTree(Parser parser,
+					 ParseTree tree,
+					 String xpath){
 	
 	Collection<ParseTree> subs = XPath.findAll(tree,xpath,parser);
 	for (ParseTree s: subs) {
@@ -35,10 +35,10 @@ public class AntlrUtil {
 	return null;
     }
 
-    static ParseTree xpathSubTree(Parser parser,
-				  ParseTree tree,
-				  List<String> xpaths){
-
+    public static ParseTree xpathSubTree(Parser parser,
+					 ParseTree tree,
+					 List<String> xpaths){
+	
 	for(String xpath: xpaths){
 	    Collection<ParseTree> subs = XPath.findAll(tree,xpath,parser);
 	    for (ParseTree s: subs) {
@@ -48,9 +48,9 @@ public class AntlrUtil {
 	return null;
     }
 
-    static String xpathSubTreeText(Parser parser,
-				   ParseTree tree,
-				   String xpath) {
+    public static String xpathSubTreeText(Parser parser,
+					  ParseTree tree,
+					  String xpath) {
 	
 	ParseTree ret = xpathSubTree(parser,tree,xpath);
 	if( ret != null ){
@@ -60,9 +60,9 @@ public class AntlrUtil {
 	}
     }
 
-    static String xpathSubTreeText(Parser parser,
-				   ParseTree tree,
-				   List<String> xpaths) {
+    public static String xpathSubTreeText(Parser parser,
+					  ParseTree tree,
+					  List<String> xpaths) {
 	
 	ParseTree ret = xpathSubTree(parser,tree,xpaths);
 	if( ret != null ){
@@ -73,9 +73,9 @@ public class AntlrUtil {
     }
 
 
-    static List<String> xpathSubTreesTexts(Parser parser,
-					   ParseTree tree,
-					   String xpath) {
+    public static List<String> xpathSubTreesTexts(Parser parser,
+						  ParseTree tree,
+						  String xpath) {
 	
 	return xpathSubTreesCont
 	    (parser,tree,xpath,
@@ -85,9 +85,9 @@ public class AntlrUtil {
 	    });
     }
 
-    static List<String> xpathSubTreeTexts(Parser parser,
-					  ParseTree tree,
-					  List<String> xpaths) {
+    public static List<String> xpathSubTreeTexts(Parser parser,
+						 ParseTree tree,
+						 List<String> xpaths) {
 	return xpathSubTreesCont
 	    (parser,tree,xpaths,
 	     (subs) -> {
@@ -97,11 +97,11 @@ public class AntlrUtil {
     }
 
     
-    static String xpathSubTreePatternText(Parser parser,
-					  ParseTree tree,
-					  String xpath,
-					  String pattern,
-					  String tag) {
+    public static String xpathSubTreePatternText(Parser parser,
+						 ParseTree tree,
+						 String xpath,
+						 String pattern,
+						 String tag) {
 	
 	ParseTree ret = xpathSubTree(parser,tree,xpath);
 	if( ret != null ){
@@ -121,15 +121,15 @@ public class AntlrUtil {
 	}
     }
     
-    static Collection<ParseTree> xpathSubTrees(Parser parser,
-					       ParseTree tree,
-					       String xpath) {
+    public static Collection<ParseTree> xpathSubTrees(Parser parser,
+						      ParseTree tree,
+						      String xpath) {
 	return XPath.findAll(tree,xpath,parser);
     }
     
-    static Collection<ParseTree> xpathSubTrees(Parser parser,
-					       ParseTree tree,
-					       List<String> xpaths) {
+    public static Collection<ParseTree> xpathSubTrees(Parser parser,
+						      ParseTree tree,
+						      List<String> xpaths) {
 
 	ArrayList<ParseTree> buff = new ArrayList<ParseTree>();
 	for( String xpath : xpaths ){
@@ -139,31 +139,31 @@ public class AntlrUtil {
     }
 
     
-    static <T> T xpathSubTreesCont(Parser parser,
-				   ParseTree tree,
-				   String xpath,
-				   Function<Collection<ParseTree>,T> cont
-				   ) {
+    public static <T> T xpathSubTreesCont(Parser parser,
+					  ParseTree tree,
+					  String xpath,
+					  Function<Collection<ParseTree>,T> cont
+					  ) {
 
 	Collection<ParseTree> subs = xpathSubTrees(parser,tree,xpath);
 	return cont.apply(subs);
     }
 
-    static <T> T xpathSubTreesCont(Parser parser,
-				   ParseTree tree,
-				   List<String> xpaths,
-				   Function<Collection<ParseTree>,T> cont
-				   ) {
+    public static <T> T xpathSubTreesCont(Parser parser,
+					  ParseTree tree,
+					  List<String> xpaths,
+					  Function<Collection<ParseTree>,T> cont
+					  ) {
 
 	Collection<ParseTree> subs = xpathSubTrees(parser,tree,xpaths);
 	return cont.apply(subs);
     }
     
-    static <T> void xpathSubTreesDo(Parser parser,
-				    ParseTree tree,
-				    String xpath,
-				    Consumer<ParseTree> cont
-				    ) {
+    public static <T> void xpathSubTreesDo(Parser parser,
+					   ParseTree tree,
+					   String xpath,
+					   Consumer<ParseTree> cont
+					   ) {
 	
 	Collection<ParseTree> subs = xpathSubTrees(parser,tree,xpath);
 	for( ParseTree t : subs ){
@@ -171,11 +171,11 @@ public class AntlrUtil {
 	}
     }
 
-    static <T> void xpathSubTreesDo(Parser parser,
-				    ParseTree tree,
-				    List<String> xpaths,
-				    Consumer<ParseTree> cont
-				    ) {
+    public static <T> void xpathSubTreesDo(Parser parser,
+					   ParseTree tree,
+					   List<String> xpaths,
+					   Consumer<ParseTree> cont
+					   ) {
 	
 	Collection<ParseTree> subs = xpathSubTrees(parser,tree,xpaths);
 	for( ParseTree t : subs ){
@@ -183,23 +183,22 @@ public class AntlrUtil {
 	}
     }
 
-    static ParseTreePattern patternMatcher(Parser parser,
-					   String ruleName,
-					   String pattern){
+    public static ParseTreePattern patternMatcher(Parser parser,
+						  String ruleName,
+						  String pattern){
 	return parser.compileParseTreePattern(pattern,
 					      parser.getRuleIndex(ruleName));
     }
 
 
-    static List<String> prettyStringHelper(ParseTree tree) {
+    public static List<String> prettyStringHelper(ParseTree tree) {
 
 	ArrayList<String> buff = new ArrayList<String>();
 	
-	int n = tree.getChildCount();
-	if( n == 0 ){
-	    buff.add( tree.getText() );
-	}
-	else {
+	if( tree instanceof TerminalNode ){
+	    buff.add(tree.getText());
+	} else {
+	    int n = tree.getChildCount();
 	    for(int i=0; i<n; i++){
 		buff.addAll(prettyStringHelper(tree.getChild(i)));
 	    }
@@ -207,12 +206,17 @@ public class AntlrUtil {
 	return buff;
     }
 
-
-    static String prettyString(ParseTree tree) {
+    public static String prettyString(ParseTree tree) {
 
 	List<String> buff = prettyStringHelper(tree);
 	return String.join(" ",buff);
     }
+
+
+
+
+
+
     
 
 }

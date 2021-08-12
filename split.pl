@@ -1,4 +1,10 @@
+=pod
 
+A perl script.
+A utility to extract cobol sources from NIST test suites.
+(https://www.itl.nist.gov/div897/ctg/cobol_form.htm)
+    
+=cut
 
 use strict;
 use autodie qw(open);

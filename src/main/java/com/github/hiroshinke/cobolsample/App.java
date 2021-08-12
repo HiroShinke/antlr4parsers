@@ -104,7 +104,7 @@ class App {
 						    
 	for( ParseTree m : moves ){
 
-	    String from = xpathSubTreeText
+	    ParseTree from = xpathSubTree
 		(
 		 parser,
 		 m,
@@ -113,7 +113,10 @@ class App {
 
 	    Collection<ParseTree> toes = xpathSubTrees(parser,m,"*/identifier");
 	    for( ParseTree t : toes ){
-		printOutput( "moveStetement",file,from ,t.getText() );
+		printOutput( "moveStetement",
+			     file,
+			     prettyString(from),
+			     prettyString(t) );
 	    }
 	}
     }

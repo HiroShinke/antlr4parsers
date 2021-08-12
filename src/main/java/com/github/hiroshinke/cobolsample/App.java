@@ -152,9 +152,8 @@ class App {
 
 	parser.reset();
         ParseTree tree = parser.startRule();
-	Collection<ParseTree> moves = xpathSubTrees(parser,
-						    tree,
-						    "//moveStatement/*");
+	Collection<ParseTree> moves = xpathSubTrees(parser,tree,"//moveStatement/*");
+						    
 	for( ParseTree m : moves ){
 
 	    String from = xpathSubTreeText
@@ -175,12 +174,11 @@ class App {
 
 	parser.reset();
         ParseTree tree = parser.startRule();
-	String xpath = "//callStatement"; // get children of blockStatement
 
-	Collection<ParseTree> calls = xpathSubTrees(parser,tree,xpath);
+	Collection<ParseTree> calls = xpathSubTrees(parser,tree,"//callStatement");
 	for( ParseTree t : calls ){
-	    String callName = xpathSubTreeText(parser,t,
-					       List.of( "*/literal", "*/identifier" ));
+	    String callName = xpathSubTreeText(parser,t,List.of("*/literal",
+								"*/identifier" ));
 
 	    List<String> params = xpathSubTreesTexts(parser,t,"*//callByReference");
 	    for(String p : params) {
@@ -194,26 +192,22 @@ class App {
 	parser.reset();
         ParseTree tree = parser.startRule();
 
-	Collection<ParseTree> entries = XPath.findAll(tree,
-						      "//dataDescriptionEntry/*",
-						      parser);
+	Collection<ParseTree> entries = xpathSubTrees(parser,tree,"//dataDescriptionEntry/*");
+
 	for( ParseTree e : entries ){
 
-	    String level = xpathSubTreeText(parser,e,
-					    List.of("*/INTEGERLITERAL",
-						    "*/LEVEL_NUMBER_88",
-						    "*/LEVEL_NUMBER_66"));
-	    String name  = xpathSubTreeText(parser,e,
-					    List.of("*/dataName",
-						    "*/conditionName"));
-
+	    String level = xpathSubTreeText(parser,e,List.of("*/INTEGERLITERAL",
+							     "*/LEVEL_NUMBER_88",
+							     "*/LEVEL_NUMBER_66"));
+	    String name  = xpathSubTreeText(parser,e,List.of("*/dataName",
+							     "*/conditionName"));
 	    String pict  = xpathSubTreeText(parser,e,"*//pictureString");
-		 
 	    String usage = xpathSubTreeText(parser,e,"*/dataUsageClause");
-
 	    String value = xpathSubTreeText(parser,e,"*//dataValueIntervalFrom");
-
-	    printOutput("dataDescription",file,level,name,pict,usage,value);
+	    String redefines = xpathSubTreeText(parser,e,"*/dataRedefinesClause/dataName");
+	    String occurs = xpathSubTreeText(parser,e,"*/dataOccursClause/integerLiteral");
+	    
+	    printOutput("dataDescription",file,level,name,pict,usage,value,redefines,occurs);
 	}
     }
 

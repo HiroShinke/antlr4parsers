@@ -18,6 +18,7 @@ import java.util.Collection;
 
 import java.util.function.Function;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 
 public class AntlrUtil {
@@ -71,6 +72,31 @@ public class AntlrUtil {
 	}
     }
 
+
+    static List<String> xpathSubTreesTexts(Parser parser,
+					   ParseTree tree,
+					   String xpath) {
+	
+	return xpathSubTreesCont
+	    (parser,tree,xpath,
+	     (subs) -> {
+		return subs.stream().map(f -> f.getText())
+		    .collect(Collectors.toList());
+	    });
+    }
+
+    static List<String> xpathSubTreeTexts(Parser parser,
+					  ParseTree tree,
+					  List<String> xpaths) {
+	return xpathSubTreesCont
+	    (parser,tree,xpaths,
+	     (subs) -> {
+		return subs.stream().map(f -> f.getText())
+		    .collect(Collectors.toList());
+	    });
+    }
+
+    
     static String xpathSubTreePatternText(Parser parser,
 					  ParseTree tree,
 					  String xpath,

@@ -152,23 +152,21 @@ class App {
 
 	parser.reset();
         ParseTree tree = parser.startRule();
-	Collection<ParseTree> moves = XPath.findAll(tree,
-						    "//moveStatement/*",
-						    parser);
+	Collection<ParseTree> moves = xpathSubTrees(parser,
+						    tree,
+						    "//moveStatement/*");
 	for( ParseTree m : moves ){
 
 	    String from = xpathSubTreeText
 		(
-		 parser,m,
+		 parser,
+		 m,
 		 List.of("//moveToSendingArea","//moveCorrespondingToSendingArea")
 		 );
 
 	    Collection<ParseTree> toes = xpathSubTrees(parser,m,"*/identifier");
 	    for( ParseTree t : toes ){
-		printOutput( "moveStetement",
-			     file,
-			     from ,
-			     t.getText() );
+		printOutput( "moveStetement",file,from ,t.getText() );
 	    }
 	}
     }
@@ -179,25 +177,16 @@ class App {
         ParseTree tree = parser.startRule();
 	String xpath = "//callStatement"; // get children of blockStatement
 
-	xpathSubTreesDo
-	    (
-	     parser,tree,xpath,
-	     (t) -> {
+	Collection<ParseTree> calls = xpathSubTrees(parser,tree,xpath);
+	for( ParseTree t : calls ){
+	    String callName = xpathSubTreeText(parser,t,
+					       List.of( "*/literal", "*/identifier" ));
 
-		 ParseTreePattern pat =
-		     patternMatcher(parser,
-				    "callStatement",
-				    "CALL <foo:literal> <goo:callUsingPhrase>");
-		 ParseTreeMatch m = pat.match(t);
-		 String callName = m.succeeded() ? m.get("foo").getText() : "";
-
-		 xpathSubTreesDo
-		     (
-		      parser,t,"*//callByReference",
-		      (p) -> {
-			  printOutput("callStatement",file,callName ,p.getText() );
-		      });
-	     });
+	    List<String> params = xpathSubTreesTexts(parser,t,"*//callByReference");
+	    for(String p : params) {
+		printOutput("callStatement",file, callName ,p);
+	    }
+	}
     }
 
     static void printDataDescriptionInfo(String file, Cobol85Parser parser){

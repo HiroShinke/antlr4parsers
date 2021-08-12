@@ -83,10 +83,10 @@ public class App {
 		RuleContext rc = (RuleContext)s;
 		String ruleName = parser.getRuleNames()[rc.getRuleIndex()];
 		if( ruleName.equals("charDataLine") ){
-		    System.out.println( srcString(rc,72,false) );
+		    System.out.println( srcString(rc,65) );
 		}
 		else if( ruleName.equals("copyStatement") ){
-		    System.err.println( srcString(rc,72,false) );
+		    System.err.println( srcString(rc,65) );
 		    String copymem = xpathSubTreeText(parser,
 						      s,
 						      "*/copySource");
@@ -94,10 +94,10 @@ public class App {
 		    
 		}
 		else if( ruleName.equals("replaceOffStatement") ){
-		    System.err.println( srcString(rc,72,false) );
+		    System.err.println( srcString(rc,65) );
 		}
 		else if( ruleName.equals("replaceArea") ){
-		    System.err.println( srcString(rc,72,false) );
+		    System.err.println( srcString(rc,65) );
 		}
 		else {
 		    throw new RuntimeException("unsupportedRule: " + ruleName);
@@ -129,19 +129,20 @@ public class App {
 		String ruleName = parser.getRuleNames()[rc.getRuleIndex()];
 
 		if( ruleName.equals("charDataLine") ){
-		    buff.append(srcString(rc,72,false));
+		    buff.append(srcString(rc,65));
+		    buff.append('\n');
 		}
 		else if( ruleName.equals("copyStatement") ){
 		    System.err.println( "copyStatement is not supported");
-		    System.err.println( srcString(rc,72,false) );
+		    System.err.println( srcString(rc,65) );
 		}
 		else if( ruleName.equals("replaceOffStatement") ){
 		    System.err.println( "replaceOffSteatement is not supported");
-		    System.err.println( srcString(rc,72,false) );
+		    System.err.println( srcString(rc,65) );
 		}
 		else if( ruleName.equals("replaceArea") ){
 		    System.err.println( "replaceArea is not supported");
-		    System.err.println( srcString(rc,72,false) );
+		    System.err.println( srcString(rc,65) );
 		}
 		else {
 		    throw new RuntimeException("unsupportedRule: " + ruleName);

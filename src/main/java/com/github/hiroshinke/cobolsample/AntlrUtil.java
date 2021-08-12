@@ -239,29 +239,33 @@ public class AntlrUtil {
               0 means no filling.
      */
 
-    public static String srcString(ParseTree tree,
-				   int fillWidth,
-				   boolean complementNewline ) {
+    public static String srcString(ParseTree tree,int fillWidth) {
 
 	ArrayList<TerminalNode> nodes = new ArrayList<TerminalNode>();
 	terminalNodeHelper(nodes,tree);
 
-	int line0   = -1;
-	int pos0    = -1;
+	int line0   = 0;
+	int pos0    = 0;
 
 	StringBuffer buff = new StringBuffer();
 
 	for(TerminalNode n : nodes) {
 
+	    // line, pos start from 1,0
 	    int line = n.getSymbol().getLine();
 	    int pos  = n.getSymbol().getCharPositionInLine();
-	    
+
+	    // System.out.printf("line,pos,line0,pos0=%d,%d,%d,%d\n",
+	    // 		          line,pos,line0,pos0);
+
 	    if( line != line0 ){
-		if( 0 <= line0 ){
-		    if( pos0 < fillWidth ){
-			buff.append(nchar(' ',fillWidth -pos0));
-		    }
-		    if( complementNewline ) {
+
+		if( 1 <= line0 ){
+		    char lastChar = buff.charAt(buff.length()-1);
+		    if( lastChar != '\n' ){
+			if( pos0 < fillWidth ){
+			    buff.append(nchar(' ',fillWidth -pos0));
+			}
 			buff.append('\n');
 		    }
 		}

@@ -15,6 +15,7 @@ import org.antlr.v4.runtime.tree.xpath.XPath;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Arrays;
 
 import java.util.function.Function;
 import java.util.function.Consumer;
@@ -213,10 +214,68 @@ public class AntlrUtil {
     }
 
 
+    static void terminalNodeHelper(List<TerminalNode> buff,
+					  ParseTree tree){
 
+	if( tree instanceof TerminalNode ){
+	    buff.add((TerminalNode)tree);
+	} else {
+	    int n = tree.getChildCount();
+	    for(int i=0; i<n; i++){
+		terminalNodeHelper(buff,tree.getChild(i));
+	    }
+	}
+    }
 
+    public static char[] nchar(char c, int n){
+	char[] buff = new char[n];
+	Arrays.fill(buff,c);
+	return buff;
+    }
 
+    /**
 
-    
+       @param fileWidth fill line with space to fixed length of fillWidth.
+              0 means no filling.
+     */
 
+    public static String lineString(ParseTree tree, int fillWidth ) {
+
+	ArrayList<TerminalNode> nodes = new ArrayList<TerminalNode>();
+	terminalNodeHelper(nodes,tree);
+
+	int line0   = -1;
+	int pos0    = -1;
+
+	StringBuffer buff = new StringBuffer();
+
+	for(TerminalNode n : nodes) {
+
+	    int line = n.getSymbol().getLine();
+	    int pos  = n.getSymbol().getCharPositionInLine();
+	    
+	    if( line != line0 ){
+		if( 0 <= line0 ){
+		    if( pos0 < fillWidth ){
+			buff.append(nchar(' ',fillWidth -pos0));
+		    }
+		    buff.append('\n');
+		}
+		buff.append(nchar(' ',pos));
+		line0 = line;
+	    }
+	    else if( pos0 != pos ){
+		buff.append(nchar(' ',pos - pos0));
+	    }
+
+	    String text = n.getText();
+	    buff.append(text);
+	    pos0 = pos + text.length();
+	}
+	if( pos0 < fillWidth ){
+	    buff.append(nchar(' ',fillWidth - pos0));
+	}
+
+	return buff.toString();
+    }
 }

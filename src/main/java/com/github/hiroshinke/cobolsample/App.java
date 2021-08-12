@@ -49,11 +49,18 @@ class App {
 	    File fileInput = new File(filePath);
 
 	    doFile(fileInput,(file) -> {
+
+		    long start = System.currentTimeMillis();
+		    
 		    InputStream is = toSrcStream(new FileInputStream(file));
 		    Cobol85Parser parser = createParser(is);
 		    printCallInfo(file.toString(),parser);
 		    printMoveInfo(file.toString(),parser);
 		    printDataDescriptionInfo(file.toString(),parser);
+
+		    System.err.printf( "process end: %s, %f s\n",
+				       file, (System.currentTimeMillis() - start)/1000.0);
+		    
 		});
 
 	} else {
@@ -73,7 +80,7 @@ class App {
 	}
 	else {
 	    try {
-		System.out.println("process file: " + file.toString() );
+		System.err.println("process file: " + file.toString() );
 		proc.accept(file);
 	    } catch( Exception e ){
 		e.printStackTrace();
@@ -136,6 +143,11 @@ class App {
 	return parser;
     }
 
+    @SafeVarargs
+    static void printOutput(String... strs){
+	System.out.println( String.join(",", strs) );
+    }
+    
     static void printMoveInfo(String file, Cobol85Parser parser){
 
 	parser.reset();
@@ -153,10 +165,10 @@ class App {
 
 	    Collection<ParseTree> toes = xpathSubTrees(parser,m,"*/identifier");
 	    for( ParseTree t : toes ){
-		System.out.printf("moveStatement %s,%s,%s\n",
-				  file,
-				  from ,
-				  t.getText() );
+		printOutput( "moveStetement",
+			     file,
+			     from ,
+			     t.getText() );
 	    }
 	}
     }
@@ -183,10 +195,7 @@ class App {
 		     (
 		      parser,t,"*//callByReference",
 		      (p) -> {
-			  System.out.printf("call : %s, %s, %s\n",
-					    file,
-					    callName ,
-					    p.getText() );
+			  printOutput("callStatement",file,callName ,p.getText() );
 		      });
 	     });
     }
@@ -215,13 +224,7 @@ class App {
 
 	    String value = xpathSubTreeText(parser,e,"*//dataValueIntervalFrom");
 
-	    System.out.println("dataDescription: " + String.join(",",
-								 file,
-								 level,
-								 name,
-								 pict,
-								 usage,
-								 value));
+	    printOutput("dataDescription",file,level,name,pict,usage,value);
 	}
     }
 

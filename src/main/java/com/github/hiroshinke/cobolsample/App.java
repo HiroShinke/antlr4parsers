@@ -48,9 +48,14 @@ class App {
 	    String filePath = args[0];
 	    File fileInput = new File(filePath);
 
+	    long start0 = System.currentTimeMillis();
+	    System.err.printf( "process start: %s\n",filePath);
+	    
 	    doFile(fileInput,(file) -> {
 
 		    long start = System.currentTimeMillis();
+
+		    System.err.printf( "file start: %s\n",file.toString());
 		    
 		    InputStream is = toSrcStream(new FileInputStream(file));
 		    Cobol85Parser parser = createParser(is);
@@ -58,10 +63,13 @@ class App {
 		    printMoveInfo(file.toString(),parser);
 		    printDataDescriptionInfo(file.toString(),parser);
 
-		    System.err.printf( "process end: %s, %f s\n",
+		    System.err.printf( "file end: %s, %f s\n",
 				       file, (System.currentTimeMillis() - start)/1000.0);
 		    
 		});
+
+	    System.err.printf( "process end: %s, %f s\n",filePath,
+			       (System.currentTimeMillis() - start0)/1000.0);
 
 	} else {
 
@@ -80,7 +88,6 @@ class App {
 	}
 	else {
 	    try {
-		System.err.println("process file: " + file.toString() );
 		proc.accept(file);
 	    } catch( Exception e ){
 		e.printStackTrace();

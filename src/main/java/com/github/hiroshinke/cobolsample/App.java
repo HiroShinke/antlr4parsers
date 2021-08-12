@@ -91,7 +91,7 @@ class App {
 	return parser;
     }
 
-    @SafeVarargs
+
     static void printOutput(String... strs){
 	System.out.println( String.join(",", strs) );
     }

@@ -33,8 +33,7 @@ import java.util.regex.Matcher;
 
 import static com.github.hiroshinke.cobolsample.AntlrUtil.*;
 
-class App {
-
+public class App {
 
     interface Consumer<T> {
 	void accept(T t) throws Exception;
@@ -80,8 +79,7 @@ class App {
 	}
     }
 
-
-    static void printTree(Parser parser, ParseTree tree){
+    public static void printTree(Parser parser, ParseTree tree){
 
 	Collection<ParseTree> subs = xpathSubTrees(parser,tree,List.of("/startRule/*"));
 	for( ParseTree s : subs ){
@@ -89,16 +87,21 @@ class App {
 		RuleContext rc = (RuleContext)s;
 		String ruleName = parser.getRuleNames()[rc.getRuleIndex()];
 		if( ruleName.equals("charDataLine") ){
-		    System.out.println( lineString(rc,72) );
+		    System.out.println( srcString(rc,72,false) );
 		}
 		else if( ruleName.equals("copyStatement") ){
-		    System.out.println( lineString(rc,72) );
+		    System.err.println( srcString(rc,72,false) );
+		    String copymem = xpathSubTreeText(parser,
+						      s,
+						      "*/copySource");
+		    System.err.printf("copy = %s\n",copymem);
+		    
 		}
 		else if( ruleName.equals("replaceOffStatement") ){
-		    System.out.println( lineString(rc,72) );
+		    System.err.println( srcString(rc,72,false) );
 		}
 		else if( ruleName.equals("replaceArea") ){
-		    System.out.println( lineString(rc,72) );
+		    System.err.println( srcString(rc,72,false) );
 		}
 		else {
 		    throw new RuntimeException("unsupportedRule: " + ruleName);
@@ -110,9 +113,54 @@ class App {
 
 	}
     }
+
+
+    public static InputStream preprocessStream(InputStream is) throws Exception {
+
+	Cobol85PreprocessorParser parser = createParser(is);
+	ParseTree tree = parser.startRule();
+
+	Collection<ParseTree> subs = xpathSubTrees(parser,
+						   tree,
+						   "/startRule/*");
+	StringBuffer buff = new StringBuffer();
+	
+	for( ParseTree s : subs ){
+
+	    if( s instanceof RuleContext ){
+
+		RuleContext rc = (RuleContext)s;
+		String ruleName = parser.getRuleNames()[rc.getRuleIndex()];
+
+		if( ruleName.equals("charDataLine") ){
+		    buff.append(srcString(rc,72,false));
+		}
+		else if( ruleName.equals("copyStatement") ){
+		    System.err.println( "copyStatement is not supported");
+		    System.err.println( srcString(rc,72,false) );
+		}
+		else if( ruleName.equals("replaceOffStatement") ){
+		    System.err.println( "replaceOffSteatement is not supported");
+		    System.err.println( srcString(rc,72,false) );
+		}
+		else if( ruleName.equals("replaceArea") ){
+		    System.err.println( "replaceArea is not supported");
+		    System.err.println( srcString(rc,72,false) );
+		}
+		else {
+		    throw new RuntimeException("unsupportedRule: " + ruleName);
+		}
+	    }
+	    else {
+		// System.out.println( s.getText() );
+	    }
+	}
+	return new ByteArrayInputStream(buff.toString().
+					getBytes(StandardCharsets.UTF_8));
+    }
     
 
-    public static void doFile(File file, Consumer<File> proc) throws Exception {
+    static void doFile(File file, Consumer<File> proc) throws Exception {
 
 	if( file.isDirectory() ){
 	    doDir(file,proc);
@@ -127,7 +175,7 @@ class App {
 	}
     }
 
-    public static void doDir(File file, Consumer<File> proc) throws Exception {
+    static void doDir(File file, Consumer<File> proc) throws Exception {
 
 	for(File f: file.listFiles() ){
 	    doFile(f,proc);
@@ -137,7 +185,7 @@ class App {
 
     static Pattern pattern = Pattern.compile("^.{6}-\\s+(\"|\')");
 
-    public static InputStream toSrcStream(InputStream is) throws Exception {
+    static InputStream toSrcStream(InputStream is) throws Exception {
 
 	BufferedReader rd = new BufferedReader(new InputStreamReader(is));
 	StringBuffer buff = new StringBuffer();
@@ -171,7 +219,7 @@ class App {
 					getBytes(StandardCharsets.UTF_8));
     }
 
-    public static Cobol85PreprocessorParser createParser(InputStream is) throws Exception {
+    static Cobol85PreprocessorParser createParser(InputStream is) throws Exception {
     
         ANTLRInputStream input = new ANTLRInputStream(is); 
         Cobol85PreprocessorLexer lexer = new Cobol85PreprocessorLexer(input); 

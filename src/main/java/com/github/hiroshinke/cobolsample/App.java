@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
 import static com.github.hiroshinke.cobolsample.AntlrUtil.*;
+import static com.github.hiroshinke.cobolpp.App.*;
 
 
 class App {
@@ -56,8 +57,10 @@ class App {
 		    long start = System.currentTimeMillis();
 
 		    System.err.printf( "file start: %s\n",file.toString());
-		    
-		    InputStream is = toSrcStream(new FileInputStream(file));
+
+		    InputStream is0 = toSrcStream(new FileInputStream(file));
+		    InputStream is  = preprocessStream(is0);
+
 		    Cobol85Parser parser = createParser(is);
 		    printCallInfo(file.toString(),parser);
 		    printMoveInfo(file.toString(),parser);

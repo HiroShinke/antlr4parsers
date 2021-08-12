@@ -239,7 +239,9 @@ public class AntlrUtil {
               0 means no filling.
      */
 
-    public static String lineString(ParseTree tree, int fillWidth ) {
+    public static String srcString(ParseTree tree,
+				   int fillWidth,
+				   boolean complementNewline ) {
 
 	ArrayList<TerminalNode> nodes = new ArrayList<TerminalNode>();
 	terminalNodeHelper(nodes,tree);
@@ -259,7 +261,9 @@ public class AntlrUtil {
 		    if( pos0 < fillWidth ){
 			buff.append(nchar(' ',fillWidth -pos0));
 		    }
-		    buff.append('\n');
+		    if( complementNewline ) {
+			buff.append('\n');
+		    }
 		}
 		buff.append(nchar(' ',pos));
 		line0 = line;

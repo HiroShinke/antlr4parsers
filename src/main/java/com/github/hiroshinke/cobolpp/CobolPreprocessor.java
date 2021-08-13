@@ -34,8 +34,14 @@ import static com.github.hiroshinke.cobolsample.ParserCommon.*;
 import static com.github.hiroshinke.cobolsample.AntlrUtil.*;
 
 
-public class App {
+public class CobolPreprocessor  {
 
+
+    List<String> libpathes;
+
+    public CobolPreprocessor(String... pathes){
+	libpathes = List.of(pathes);
+    }
     
     public static void main(String[] args) throws Exception {
 
@@ -111,7 +117,7 @@ public class App {
     }
 
 
-    public static InputStream preprocessStream(InputStream is) throws Exception {
+    public InputStream preprocessStream(InputStream is) throws Exception {
 
 	Cobol85PreprocessorParser parser = createParser(is);
 	ParseTree tree = parser.startRule();
@@ -133,8 +139,12 @@ public class App {
 		    buff.append('\n');
 		}
 		else if( ruleName.equals("copyStatement") ){
-		    System.err.println( "copyStatement is not supported");
+
+		    System.err.println( "copyStatement expanded");
 		    System.err.println( srcString(rc,65) );
+		    String copymem = xpathSubTreeText(parser,s,"*/copySource");
+		    
+		    processCopySentence(copymem, buff);
 		}
 		else if( ruleName.equals("replaceOffStatement") ){
 		    System.err.println( "replaceOffSteatement is not supported");
@@ -149,13 +159,46 @@ public class App {
 		}
 	    }
 	    else {
-		// System.out.println( s.getText() );
+		// buff.append(srcString(s,65)); 
 	    }
 	}
 	return new ByteArrayInputStream(buff.toString().
 					getBytes(StandardCharsets.UTF_8));
     }
+
+    File findFile(String copymem) throws Exception {
+
+	for(String ext: List.of("", ".cbl", ".txt")){
+	    for(String path: libpathes){
+		File file = new File(path, copymem + ext);
+		if( file.exists() ){
+		    return file;
+		}
+	    }
+	}
+	return null;
+    }
     
+    void processCopySentence(String copymem, StringBuffer buff) throws Exception {
+
+	File lib = findFile(copymem);
+
+	System.err.println("lib=" + lib.getPath());
+	
+	InputStream is0 = toSrcStream(new FileInputStream(lib));
+	BufferedReader rd =
+	    new BufferedReader
+	    ( new InputStreamReader( preprocessStream(is0) ) );
+
+	System.err.println("start loop" );
+	
+	String line = null;
+	while( (line = rd.readLine()) != null ){
+	    System.err.println("line=" + line);
+	    buff.append(line);
+	    buff.append('\n');
+	}
+    }
 
     static Cobol85PreprocessorParser createParser(InputStream is) throws Exception {
     

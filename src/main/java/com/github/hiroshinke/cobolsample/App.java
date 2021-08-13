@@ -29,24 +29,50 @@ import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
+import com.github.hiroshinke.cobolpp.CobolPreprocessor;
 import static com.github.hiroshinke.cobolsample.AntlrUtil.*;
-import static com.github.hiroshinke.cobolpp.App.*;
 import static com.github.hiroshinke.cobolsample.ParserCommon.*;
+
+import org.apache.commons.cli.*;
 
 
 class App {
     
     public static void main(String[] args) throws Exception {
 
-        // create a CharStream that reads from standard input
 
-	if( args.length > 0 ){
+	Options opts = new Options();
 
-	    String filePath = args[0];
+	Option srcpath = Option.builder("s")
+	    .argName("src")
+	    .hasArg()
+	    .desc("path of src or src directory")
+	    .build();
+
+	Option libpathes = Option.builder("I")
+	    .argName("libpath")
+	    .hasArgs()
+	    .valueSeparator(';')
+	    .desc("path to directory including copy members")
+	    .build();
+
+	opts.addOption(srcpath);
+	opts.addOption(libpathes);
+	
+	CommandLineParser cmdParser = new DefaultParser();
+	CommandLine line = cmdParser.parse( opts, args );
+
+	String filePath = line.getOptionValue("s");
+	String[] libpathValue  = line.getOptionValues("I");
+
+	if( filePath != null ){
+
 	    File fileInput = new File(filePath);
 
 	    long start0 = System.currentTimeMillis();
 	    System.err.printf( "process start: %s\n",filePath);
+
+	    CobolPreprocessor prep = new CobolPreprocessor(libpathValue);
 	    
 	    doFile(fileInput,(file) -> {
 
@@ -55,7 +81,7 @@ class App {
 		    System.err.printf( "file start: %s\n",file.toString());
 
 		    InputStream is0 = toSrcStream(new FileInputStream(file));
-		    InputStream is  = preprocessStream(is0);
+		    InputStream is  = prep.preprocessStream(is0);
 
 		    Cobol85Parser parser = createParser(is);
 		    printCallInfo(file.toString(),parser);

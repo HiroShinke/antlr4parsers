@@ -190,11 +190,8 @@ public class CobolPreprocessor  {
 	    new BufferedReader
 	    ( new InputStreamReader( preprocessStream(is0) ) );
 
-	System.err.println("start loop" );
-	
 	String line = null;
 	while( (line = rd.readLine()) != null ){
-	    System.err.println("line=" + line);
 	    buff.append(line);
 	    buff.append('\n');
 	}

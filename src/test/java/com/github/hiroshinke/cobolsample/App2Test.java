@@ -5,26 +5,29 @@ package com.github.hiroshinke.cobolsample;
 import static org.junit.Assert.*;
 import org.junit.Test;
 import org.junit.Rule;
+import org.junit.rules.TemporaryFolder;
 import static org.hamcrest.Matchers.is;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.io.File;
 import org.junit.contrib.java.lang.system.SystemOutRule;
 
 import java.util.Collection;
 import java.util.List;
 
-import org.antlr.v4.runtime.tree.xpath.XPath;
-import org.antlr.v4.runtime.tree.ParseTree;
-
-import static com.github.hiroshinke.cobolsample.ParserCommon.pattern;
+import org.apache.commons.io.FileUtils;
+import com.github.hiroshinke.cobolpp.CobolPreprocessor;
 
 /**
  * Unit test for simple App.
  */
 public class App2Test
 {
+    @Rule
+    public TemporaryFolder tempFolder = new TemporaryFolder();
+
     @Rule
     public final SystemOutRule systemOutRule = new SystemOutRule().enableLog();
 
@@ -207,8 +210,85 @@ public class App2Test
 	assertThat(systemOutRule.getLog(),
 		   is("dataDescription,prog1,01,XXXX,9(10),,,YYYY,\n"));
     }
+
+
+    @Test
+    public void testDataDescCopy1() throws Exception 
+    {
+
+	CobolPreprocessor prep
+	    = new CobolPreprocessor(tempFolder.getRoot().getPath());
+
+	String src = cobolTemplate
+	    (
+	     "01 XXXX PIC 9(10) REDEFINES YYYY. \n",
+	     "CALL 'aaaa' USING XXXX.\n" +
+	     "MOVE 1 TO XXXX.\n"
+	     );
+
+	InputStream is = prep.preprocessStream(toInputStream(src));
+	Cobol85Parser parser = App.createParser(is);
+	App.printDataDescriptionInfo("prog1",parser);
+	assertThat(systemOutRule.getLog(),
+		   is("dataDescription,prog1,01,XXXX,9(10),,,YYYY,\n"));
+    }
+
+    @Test
+    public void testDataDescCopy2() throws Exception 
+    {
+
+	CobolPreprocessor prep
+	    = new CobolPreprocessor(tempFolder.getRoot().getPath());
+
+	File file1 = tempFolder.newFile("YYYY");
+	FileUtils.writeStringToFile(file1,
+				    "123456 01 XXXX PIC 9(10) REDEFINES YYYY. \n",
+				    StandardCharsets.UTF_8);
+	String src = cobolTemplate
+	    (
+	     "01 XXXX PIC 9(10) REDEFINES YYYY. \n" +
+	     "COPY YYYY. \n",
+	     "CALL 'aaaa' USING XXXX.\n" +
+	     "MOVE 1 TO XXXX.\n"
+	     );
+
+	InputStream is = prep.preprocessStream(toInputStream(src));
+	Cobol85Parser parser = App.createParser(is);
+	App.printDataDescriptionInfo("prog1",parser);
+	assertThat(systemOutRule.getLog(),
+		   is("dataDescription,prog1,01,XXXX,9(10),,,YYYY,\n" +
+		      "dataDescription,prog1,01,XXXX,9(10),,,YYYY,\n" ));
+    }
+
+
+    @Test
+    public void testDataDescCopy3() throws Exception 
+    {
+
+	CobolPreprocessor prep
+	    = new CobolPreprocessor(tempFolder.getRoot().getPath());
+
+	File file1 = tempFolder.newFile("YYYY");
+	FileUtils.writeStringToFile(file1,
+				    "123456         PIC 9(10) REDEFINES YYYY. \n",
+				    StandardCharsets.UTF_8);
+	String src = cobolTemplate
+	    (
+	     "01 XXXX PIC 9(10) REDEFINES YYYY. \n" +
+	     "01 XXXX COPY YYYY. \n",
+	     "CALL 'aaaa' USING XXXX.\n" +
+	     "MOVE 1 TO XXXX.\n"
+	     );
+
+	InputStream is = prep.preprocessStream(toInputStream(src));
+	Cobol85Parser parser = App.createParser(is);
+	App.printDataDescriptionInfo("prog1",parser);
+	assertThat(systemOutRule.getLog(),
+		   is("dataDescription,prog1,01,XXXX,9(10),,,YYYY,\n" +
+		      "dataDescription,prog1,01,XXXX,9(10),,,YYYY,\n" ));
+    }
     
-    
+
     @Test
     public void testCall1() throws Exception 
     {

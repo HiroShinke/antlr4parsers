@@ -45,13 +45,17 @@ class App {
 
 	Option srcpath = Option.builder("s")
 	    .argName("src")
+	    .longOpt("file")
 	    .hasArg()
+	    .type(String.class)
 	    .desc("path of src or src directory")
 	    .build();
 
 	Option libpathes = Option.builder("I")
 	    .argName("libpath")
+	    .longOpt("libpath")
 	    .hasArgs()
+	    .type(String.class)
 	    .valueSeparator(';')
 	    .desc("path to directory including copy members")
 	    .build();
@@ -97,12 +101,8 @@ class App {
 			       (System.currentTimeMillis() - start0)/1000.0);
 
 	} else {
-
-	    Cobol85Parser parser = createParser(System.in);
-	    
-	    printCallInfo("<stdin>",parser);
-	    printMoveInfo("<stdin>",parser);
-	    printDataDescriptionInfo("<stdin>",parser);
+	    HelpFormatter format = new HelpFormatter();
+	    format.printHelp("cobolparser", opts);
 	}
     }
 

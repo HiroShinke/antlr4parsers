@@ -52,24 +52,7 @@ public class CobolPreprocessor  {
 
 	    long start0 = System.currentTimeMillis();
 	    System.err.printf( "process start: %s\n",filePath);
-	    
-	    doFile(fileInput,(file) -> {
-
-		    long start = System.currentTimeMillis();
-
-		    System.err.printf( "file start: %s\n",file.toString());
-		    
-		    InputStream is = toSrcStream(new FileInputStream(file));
-		    Cobol85PreprocessorParser parser = createParser(is);
-		    ParseTree tree = parser.startRule();
-		    // System.out.println(tree.toStringTree(parser));
-		    printTree(parser,tree);
-		    
-		    System.err.printf( "file end: %s, %f s\n",
-				       file, (System.currentTimeMillis() - start)/1000.0);
-		    
-		});
-
+	    doFile(fileInput,CobolPreprocessor::parseFile);
 	    System.err.printf( "process end: %s, %f s\n",filePath,
 			       (System.currentTimeMillis() - start0)/1000.0);
 
@@ -81,6 +64,23 @@ public class CobolPreprocessor  {
 	}
     }
 
+    static void parseFile(File file) throws Exception {
+
+	long start = System.currentTimeMillis();
+	
+	System.err.printf( "file start: %s\n",file.toString());
+	
+	InputStream is = toSrcStream(new FileInputStream(file));
+	Cobol85PreprocessorParser parser = createParser(is);
+	ParseTree tree = parser.startRule();
+	// System.out.println(tree.toStringTree(parser));
+	printTree(parser,tree);
+	
+	System.err.printf( "file end: %s, %f s\n",
+			   file, (System.currentTimeMillis() - start)/1000.0);
+
+    }
+    
     public static void printTree(Parser parser, ParseTree tree){
 
 	Collection<ParseTree> subs = xpathSubTrees(parser,tree,List.of("/startRule/*"));
@@ -182,7 +182,10 @@ public class CobolPreprocessor  {
     void processCopySentence(String copymem, StringBuffer buff) throws Exception {
 
 	File lib = findFile(copymem);
-
+	if( lib == null) {
+	    System.err.println("copymem not found: " + copymem);
+	    return;
+	}
 	System.err.println("lib=" + lib.getPath());
 	
 	InputStream is0 = toSrcStream(new FileInputStream(lib));

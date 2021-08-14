@@ -68,6 +68,9 @@ class App {
 
 	String filePath = line.getOptionValue("s");
 	String[] libpathValue  = line.getOptionValues("I");
+	if( libpathValue == null ) {
+	    libpathValue = new String[]{};
+	};
 
 	if( filePath != null ){
 
@@ -77,25 +80,7 @@ class App {
 	    System.err.printf( "process start: %s\n",filePath);
 
 	    CobolPreprocessor prep = new CobolPreprocessor(libpathValue);
-	    
-	    doFile(fileInput,(file) -> {
-
-		    long start = System.currentTimeMillis();
-
-		    System.err.printf( "file start: %s\n",file.toString());
-
-		    InputStream is0 = toSrcStream(new FileInputStream(file));
-		    InputStream is  = prep.preprocessStream(is0);
-
-		    Cobol85Parser parser = createParser(is);
-		    printCallInfo(file.toString(),parser);
-		    printMoveInfo(file.toString(),parser);
-		    printDataDescriptionInfo(file.toString(),parser);
-
-		    System.err.printf( "file end: %s, %f s\n",
-				       file, (System.currentTimeMillis() - start)/1000.0);
-		    
-		});
+	    doFile(fileInput,file -> parseFile(file,prep));
 
 	    System.err.printf( "process end: %s, %f s\n",filePath,
 			       (System.currentTimeMillis() - start0)/1000.0);
@@ -105,6 +90,27 @@ class App {
 	    format.printHelp("cobolparser", opts);
 	}
     }
+
+
+    static void parseFile(File file,CobolPreprocessor prep ) throws Exception {
+
+	long start = System.currentTimeMillis();
+	
+	System.err.printf( "file start: %s\n",file.toString());
+	
+	InputStream is0 = toSrcStream(new FileInputStream(file));
+	InputStream is  = prep.preprocessStream(is0);
+	
+	Cobol85Parser parser = createParser(is);
+	printCallInfo(file.toString(),parser);
+	printMoveInfo(file.toString(),parser);
+	printDataDescriptionInfo(file.toString(),parser);
+	
+	System.err.printf( "file end: %s, %f s\n",
+			   file, (System.currentTimeMillis() - start)/1000.0);
+
+    }
+    
 
 
     public static Cobol85Parser createParser(InputStream is) throws Exception {

@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.antlr.v4.runtime.tree.xpath.XPath;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -145,8 +146,120 @@ public class AppTest
 	assertThat(m.end(),is(10));	
     }
 
+    @Test
+    public void testFileControl() throws Exception 
+    {
+	InputStream is = toInputStream("SELECT FILE01 ASSIGN TO DD01. ");
+	Cobol85Parser parser = App.createParser(is);
+	ParseTree tree = parser.fileControlEntry();
+	String xpath = "//fileName";
+	Collection<ParseTree> es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
+	String value = "";
+	for(ParseTree e: es) {
+	    value = e.getText();
+	}
+	assertThat(value,is("FILE01"));	
+
+	xpath = "//assignmentName";
+	es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
+	for(ParseTree e: es) {
+	    value = e.getText();
+	}
+	assertThat(value,is("DD01"));	
+    }
+
+    @Test
+    public void testFileDescription() throws Exception 
+    {
+	InputStream is = toInputStream("FD FILE01. \n"+
+				       "   BLOCK CONTAINS 10 TO 20 RECORDS. \n"+
+				       "01 IN-REC. \n"+
+				       "   03 XXX PIC X(10). \n");
+	Cobol85Parser parser = App.createParser(is);
+	ParseTree tree = parser.fileDescriptionEntry();
+	String xpath = "*/fileName";
+	Collection<ParseTree> es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
+	String value = "";
+	for(ParseTree e: es) {
+	    value = e.getText();
+	}
+	assertThat(value,is("FILE01"));	
+
+	xpath = "//dataDescriptionEntry/*/dataName";
+	es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
+	List<String> ret = es.stream()
+	    .map(ParseTree::getText)
+	    .collect(Collectors.toList());
+	assertThat(ret,is(List.of("IN-REC","XXX")));	
+    }
+
+    @Test
+    public void testReadStatement() throws Exception 
+    {
+	InputStream is = toInputStream("READ F01 INTO IN-REC. ");
+	Cobol85Parser parser = App.createParser(is);
+	ParseTree tree = parser.readStatement();
+	String xpath = "*/fileName";
+	Collection<ParseTree> es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
+	String value = "";
+	for(ParseTree e: es) {
+	    value = e.getText();
+	}
+	assertThat(value,is("F01"));	
+
+	xpath = "*/readInto/identifier";
+	es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
+	for(ParseTree e: es) {
+	    value = e.getText();
+	}
+	assertThat(value,is("IN-REC"));	
+    }
 
 
+    
+    @Test
+    public void testWriteStatement() throws Exception 
+    {
+	InputStream is = toInputStream("WRITE OUT-REC FROM WK-REC. ");
+	Cobol85Parser parser = App.createParser(is);
+	ParseTree tree = parser.writeStatement();
+	String xpath = "*/recordName";
+	Collection<ParseTree> es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
+	String value = "";
+	for(ParseTree e: es) {
+	    value = e.getText();
+	}
+	assertThat(value,is("OUT-REC"));	
+
+	xpath = "//writeFromPhrase/identifier";
+	es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
+	for(ParseTree e: es) {
+	    value = e.getText();
+	}
+	assertThat(value,is("WK-REC"));	
+    }
+
+
+    @Test
+    public void testOpenStatement() throws Exception 
+    {
+	InputStream is = toInputStream("OPEN INPUT X Y OUTPUT Z W. ");
+	Cobol85Parser parser = App.createParser(is);
+	ParseTree tree = parser.openStatement();
+	String xpath = "//openInputStatement//fileName";
+	Collection<ParseTree> es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
+	List<String> ret = es.stream()
+	    .map( ParseTree::getText )
+	    .collect(Collectors.toList());
+	assertThat(ret,is(List.of("X","Y")));
+
+	xpath = "//openOutputStatement//fileName";
+	es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
+	ret = es.stream()
+	    .map( ParseTree::getText )
+	    .collect(Collectors.toList());
+	assertThat(ret,is(List.of("Z","W")));
+    }
 
     
 

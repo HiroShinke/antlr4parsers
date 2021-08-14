@@ -105,7 +105,9 @@ class App {
 	printCallInfo(file.toString(),parser);
 	printMoveInfo(file.toString(),parser);
 	printDataDescriptionInfo(file.toString(),parser);
-	
+	printFileInfo(file.toString(),parser);
+	printFileIOInfo(file.toString(),parser);
+
 	System.err.printf( "file end: %s, %f s\n",
 			   file, (System.currentTimeMillis() - start)/1000.0);
 
@@ -194,5 +196,51 @@ class App {
 	}
     }
 
+
+    static void printFileInfo(String file, Cobol85Parser parser){
+
+	parser.reset();
+        ParseTree tree = parser.startRule();
+
+	Collection<ParseTree> entries = xpathSubTrees(parser,tree,"//fileDescriptionEntry");
+
+	for( ParseTree e : entries ){
+
+	    String fileName  = xpathSubTreeText(parser,e,"*/fileName");
+	    // TODO: support multi records.
+	    String recName = AntlrUtil.xpathSubTreeText
+		(parser,e,"//dataDescriptionEntry/*/dataName");
+	    
+	    printOutput("fileDescription",file,fileName,recName);
+	}
+    }
+    
+
+    static void printFileIOInfo(String file, Cobol85Parser parser){
+
+	parser.reset();
+        ParseTree tree = parser.startRule();
+
+	Collection<ParseTree> entries = xpathSubTrees(parser,tree,"//readStatement");
+	for( ParseTree e : entries ){
+	    Collection<ParseTree> recs = xpathSubTrees
+		(parser,e,"//readInto/identifier");
+	    // TODO: include records defined in fileDescriptionEntry
+	    for(ParseTree r: recs){
+		printOutput("fileIO",file,r.getText(),"I");
+	    }
+	}
+
+	entries = xpathSubTrees(parser,tree,"//writeStatement");
+	for( ParseTree e : entries ){
+	    Collection<ParseTree> recs = xpathSubTrees
+		(parser,e,List.of("*/recordName","//writeFromPhrase/identifier"));
+	    for(ParseTree r: recs){
+		printOutput("fileIO",file,r.getText(),"O");
+	    }
+	}
+
+    }
+    
 }
 

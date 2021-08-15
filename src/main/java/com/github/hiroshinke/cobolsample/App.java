@@ -139,11 +139,8 @@ class App {
 	for( ParseTree m : moves ){
 
 	    ParseTree from = xpathSubTree
-		(
-		 parser,
-		 m,
-		 List.of("//moveToSendingArea","//moveCorrespondingToSendingArea")
-		 );
+		(parser,m,List.of("//moveToSendingArea",
+				  "//moveCorrespondingToSendingArea"));
 
 	    Collection<ParseTree> toes = xpathSubTrees(parser,m,"*/identifier");
 	    for( ParseTree t : toes ){

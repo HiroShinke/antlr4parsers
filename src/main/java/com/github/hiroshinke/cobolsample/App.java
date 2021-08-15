@@ -20,7 +20,9 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Collection;
+import java.util.stream.Collectors;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -37,6 +39,12 @@ import org.apache.commons.cli.*;
 
 
 class App {
+
+    static class FileDescription {
+	String fileName;
+	String assignmentName;
+	List<String> recNames;
+    }
     
     public static void main(String[] args) throws Exception {
 
@@ -105,8 +113,13 @@ class App {
 	printCallInfo(file.toString(),parser);
 	printMoveInfo(file.toString(),parser);
 	printDataDescriptionInfo(file.toString(),parser);
-	printFileInfo(file.toString(),parser);
-	printFileIOInfo(file.toString(),parser);
+
+	HashMap<String,FileDescription> fileDict
+	    = new HashMap<String,FileDescription>();
+
+	printFileControlInfo(file.toString(),parser,fileDict);
+	printFileInfo(file.toString(),parser,fileDict);
+	printFileIOInfo(file.toString(),parser,fileDict);
 
 	System.err.printf( "file end: %s, %f s\n",
 			   file, (System.currentTimeMillis() - start)/1000.0);
@@ -193,8 +206,33 @@ class App {
 	}
     }
 
+    
+    static void printFileControlInfo(String file,
+				     Cobol85Parser parser,
+				     HashMap<String,FileDescription> fileDict){
 
-    static void printFileInfo(String file, Cobol85Parser parser){
+	parser.reset();
+        ParseTree tree = parser.startRule();
+
+	Collection<ParseTree> entries = xpathSubTrees(parser,tree,"//fileControlEntry");
+
+	for( ParseTree e : entries ){
+
+	    String fileName   = xpathSubTreeText(parser,e,"//fileName");
+	    String assignName = xpathSubTreeText(parser,e,"//assignmentName");
+
+	    FileDescription fd = new FileDescription();
+	    fd.fileName = fileName;
+	    fd.assignmentName = assignName;
+	    fileDict.put(fileName,fd);
+	    
+	    printOutput("fileControlEntry",file,fileName,assignName);
+	}
+    }
+
+    static void printFileInfo(String file,
+			      Cobol85Parser parser,
+			      HashMap<String,FileDescription> fileDict){
 
 	parser.reset();
         ParseTree tree = parser.startRule();
@@ -204,25 +242,48 @@ class App {
 	for( ParseTree e : entries ){
 
 	    String fileName  = xpathSubTreeText(parser,e,"*/fileName");
-	    // TODO: support multi records.
-	    String recName = AntlrUtil.xpathSubTreeText
-		(parser,e,"//dataDescriptionEntry/*/dataName");
+	    FileDescription fd = fileDict.get(fileName);
+
+	    Collection<ParseTree> items = xpathSubTrees
+		(parser,e,"//dataDescriptionEntry/*");
 	    
-	    printOutput("fileDescription",file,fileName,recName);
+	    List<String> recNames = items.stream()
+		.filter( n -> {
+			String level = xpathSubTreeText(parser,n,"*/INTEGERLITERAL");
+			return level.equals("01") || level.equals("1");
+		    })
+		.map( n -> xpathSubTreeText(parser,n,"*/dataName") )
+		.collect( Collectors.toList() );
+
+	    fd.recNames = recNames;
+		
+	    for( String recName : recNames ){
+		    printOutput("fileDescription",file,fileName,recName);
+	    }
 	}
     }
     
 
-    static void printFileIOInfo(String file, Cobol85Parser parser){
+    static void printFileIOInfo(String file,
+				Cobol85Parser parser,
+				HashMap<String,FileDescription> fileDict){
 
 	parser.reset();
         ParseTree tree = parser.startRule();
 
 	Collection<ParseTree> entries = xpathSubTrees(parser,tree,"//readStatement");
 	for( ParseTree e : entries ){
+
+	    String fileName = xpathSubTreeText(parser,e,"*/fileName");
+	    FileDescription fd = fileDict.get(fileName);
+
+	    for(String r: fd.recNames){
+		printOutput("fileIO",file,r,"I");
+	    }
+	    
 	    Collection<ParseTree> recs = xpathSubTrees
 		(parser,e,"//readInto/identifier");
-	    // TODO: include records defined in fileDescriptionEntry
+
 	    for(ParseTree r: recs){
 		printOutput("fileIO",file,r.getText(),"I");
 	    }

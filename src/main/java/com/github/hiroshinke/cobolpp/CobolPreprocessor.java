@@ -143,7 +143,6 @@ public class CobolPreprocessor  {
 		    System.err.println( "copyStatement expanded");
 		    System.err.println( srcString(rc,65) );
 		    String copymem = xpathSubTreeText(parser,s,"*/copySource");
-		    
 		    processCopySentence(copymem, buff);
 		}
 		else if( ruleName.equals("replaceOffStatement") ){
@@ -166,13 +165,30 @@ public class CobolPreprocessor  {
 					getBytes(StandardCharsets.UTF_8));
     }
 
+    static String stripQuote(String literal){
+	return literal.substring(1,literal.length()-1);
+    }
+    
     File findFile(String copymem) throws Exception {
 
-	for(String ext: List.of("", ".cbl", ".txt")){
+	if( copymem.charAt(0) == '\'' || copymem.charAt(0) == '"'  ){
+
+	    copymem = stripQuote(copymem);
 	    for(String path: libpathes){
-		File file = new File(path, copymem + ext);
+		File file = new File(path, copymem);
 		if( file.exists() ){
 		    return file;
+		}
+	    }
+
+	} else {
+
+	    for(String ext: List.of("", ".cbl", ".txt")){
+		for(String path: libpathes){
+		    File file = new File(path, copymem + ext);
+		    if( file.exists() ){
+			return file;
+		    }
 		}
 	    }
 	}

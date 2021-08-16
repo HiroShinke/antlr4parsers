@@ -271,31 +271,51 @@ class App {
 	parser.reset();
         ParseTree tree = parser.startRule();
 
+	HashMap<String,FileDescription> reverseMap =
+	    new HashMap<String,FileDescription>();
+	
+	for(String key: fileDict.keySet()){
+	    FileDescription fd = fileDict.get(key);
+	    for(String rec: fd.recNames){
+		reverseMap.put(rec,fd);
+	    }
+	}
+
 	Collection<ParseTree> entries = xpathSubTrees(parser,tree,"//readStatement");
 	for( ParseTree e : entries ){
 
 	    String fileName = xpathSubTreeText(parser,e,"*/fileName");
 	    FileDescription fd = fileDict.get(fileName);
-
 	    for(String r: fd.recNames){
-		printOutput("fileIO",file,r,"I");
+		printOutput("fileIO",file,
+			    fd.fileName,fd.assignmentName,r,"I");
 	    }
-	    
-	    Collection<ParseTree> recs = xpathSubTrees
+	    String rec2 = xpathSubTreeText
 		(parser,e,"//readInto/identifier");
 
-	    for(ParseTree r: recs){
-		printOutput("fileIO",file,r.getText(),"I");
+	    if( !rec2.isEmpty() ){	    
+		printOutput("fileIO",file,
+			    fd.fileName,fd.assignmentName,rec2,"I");
 	    }
 	}
 
 	entries = xpathSubTrees(parser,tree,"//writeStatement");
 	for( ParseTree e : entries ){
-	    Collection<ParseTree> recs = xpathSubTrees
-		(parser,e,List.of("*/recordName","//writeFromPhrase/identifier"));
-	    for(ParseTree r: recs){
-		printOutput("fileIO",file,r.getText(),"O");
+
+	    String rec1 = xpathSubTreeText(parser,e,"*/recordName");
+	    FileDescription fd = reverseMap.get(rec1);
+
+	    printOutput("fileIO",file,
+			fd.fileName,fd.assignmentName,rec1,"O");
+
+	    String rec2 = xpathSubTreeText
+		(parser,e,"//writeFromPhrase/identifier");
+
+	    if( !rec2.isEmpty() ){
+		printOutput("fileIO",file,
+			    fd.fileName,fd.assignmentName,rec2,"O");
 	    }
+			    
 	}
 
     }

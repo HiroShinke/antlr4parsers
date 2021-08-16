@@ -137,5 +137,34 @@ public class AppTest
 	assertThat(src3,is(fillToWidth("01 YYYY PIC X(10).")));	
     }
 
+
+    @Test
+    public void testApp5() throws Exception 
+    {
+	CobolPreprocessor prep
+	    = new CobolPreprocessor(tempFolder.getRoot().getPath());
+
+	File file1 = tempFolder.newFile("YYYY.cbl");
+
+	FileUtils.writeStringToFile(file1,
+				    "123456   PIC X(10). \n",
+				    StandardCharsets.UTF_8);
+
+	InputStream is = prep.preprocessStream
+	    (toInputStream
+	     (
+	      "01 XXXX COPY 'YYYY.cbl'.\n" +
+	      "01 YYYY PIC X(10).\n"
+	      )
+	     );
+	BufferedReader rd = bufferedReader(is);
+	String src1 = rd.readLine();
+	String src2 = rd.readLine();
+	String src3 = rd.readLine();
+	assertThat(src1,is(fillToWidth("01 XXXX")));
+	assertThat(src2,is(fillToWidth("  PIC X(10).")));
+	assertThat(src3,is(fillToWidth("01 YYYY PIC X(10).")));	
+    }
+    
     
 }

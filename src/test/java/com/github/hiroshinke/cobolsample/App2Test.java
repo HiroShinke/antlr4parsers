@@ -64,7 +64,7 @@ public class App2Test
 	Cobol85Parser parser = App.createParser(is);
 	App.printDataDescriptionInfo("prog1",parser);
 	assertThat(systemOutRule.getLog(),
-		   is("dataDescription,prog1,01,XXXX,9(10),,,,\n"));
+		   is("dataDescription,prog1,01,XXXX,9(10),,,,,10\n"));
     }
 
     @Test
@@ -80,7 +80,7 @@ public class App2Test
 	Cobol85Parser parser = App.createParser(is);
 	App.printDataDescriptionInfo("prog1",parser);
 	assertThat(systemOutRule.getLog(),
-		   is("dataDescription,prog1,01,XXXX,XXX,,,,\n"));
+		   is("dataDescription,prog1,01,XXXX,XXX,,,,,3\n"));
     }
 
     @Test
@@ -96,7 +96,7 @@ public class App2Test
 	Cobol85Parser parser = App.createParser(is);
 	App.printDataDescriptionInfo("prog1",parser);
 	assertThat(systemOutRule.getLog(),
-		   is("dataDescription,prog1,01,XXXX,S999V999,,,,\n"));
+		   is("dataDescription,prog1,01,XXXX,S999V999,,,,,6\n"));
     }
 
     @Test
@@ -112,7 +112,7 @@ public class App2Test
 	Cobol85Parser parser = App.createParser(is);
 	App.printDataDescriptionInfo("prog1",parser);
 	assertThat(systemOutRule.getLog(),
-		   is("dataDescription,prog1,01,XXXX,999.999,,,,\n"));
+		   is("dataDescription,prog1,01,XXXX,999.999,,,,,6\n"));
     }
 
     @Test
@@ -129,7 +129,7 @@ public class App2Test
 	Cobol85Parser parser = App.createParser(is);
 	App.printDataDescriptionInfo("prog1",parser);
 	assertThat(systemOutRule.getLog(),
-		   is("dataDescription,prog1,01,XXXX,X(10),,,,\n"));
+		   is("dataDescription,prog1,01,XXXX,X(10),,,,,10\n"));
     }
     
     @Test
@@ -145,7 +145,7 @@ public class App2Test
 	Cobol85Parser parser = App.createParser(is);
 	App.printDataDescriptionInfo("prog1",parser);
 	assertThat(systemOutRule.getLog(),
-		   is("dataDescription,prog1,01,XXXX,9(10),,,,10\n"));
+		   is("dataDescription,prog1,01,XXXX,9(10),,,,10,10\n"));
     }
     @Test
     public void testDataDesc3() throws Exception 
@@ -160,7 +160,7 @@ public class App2Test
 	Cobol85Parser parser = App.createParser(is);
 	App.printDataDescriptionInfo("prog1",parser);
 	assertThat(systemOutRule.getLog(),
-		   is("dataDescription,prog1,01,XXXX,9(10),,'ssss',,\n"));
+		   is("dataDescription,prog1,01,XXXX,9(10),,'ssss',,,10\n"));
     }
 
     @Test
@@ -176,7 +176,7 @@ public class App2Test
 	Cobol85Parser parser = App.createParser(is);
 	App.printDataDescriptionInfo("prog1",parser);
 	assertThat(systemOutRule.getLog(),
-		   is("dataDescription,prog1,01,,9(10),,,,\n"));
+		   is("dataDescription,prog1,01,,9(10),,,,,10\n"));
     }
 
     @Test
@@ -192,7 +192,7 @@ public class App2Test
 	Cobol85Parser parser = App.createParser(is);
 	App.printDataDescriptionInfo("prog1",parser);
 	assertThat(systemOutRule.getLog(),
-		   is("dataDescription,prog1,01,XXXX,S9(10),COMP,,,\n"));
+		   is("dataDescription,prog1,01,XXXX,S9(10),COMP,,,,8\n"));
     }
 
     @Test
@@ -208,7 +208,7 @@ public class App2Test
 	Cobol85Parser parser = App.createParser(is);
 	App.printDataDescriptionInfo("prog1",parser);
 	assertThat(systemOutRule.getLog(),
-		   is("dataDescription,prog1,01,XXXX,9(10),,,YYYY,\n"));
+		   is("dataDescription,prog1,01,XXXX,9(10),,,YYYY,,10\n"));
     }
 
 
@@ -230,7 +230,7 @@ public class App2Test
 	Cobol85Parser parser = App.createParser(is);
 	App.printDataDescriptionInfo("prog1",parser);
 	assertThat(systemOutRule.getLog(),
-		   is("dataDescription,prog1,01,XXXX,9(10),,,YYYY,\n"));
+		   is("dataDescription,prog1,01,XXXX,9(10),,,YYYY,,10\n"));
     }
 
     @Test
@@ -256,8 +256,8 @@ public class App2Test
 	Cobol85Parser parser = App.createParser(is);
 	App.printDataDescriptionInfo("prog1",parser);
 	assertThat(systemOutRule.getLog(),
-		   is("dataDescription,prog1,01,XXXX,9(10),,,YYYY,\n" +
-		      "dataDescription,prog1,01,XXXX,9(10),,,YYYY,\n" ));
+		   is("dataDescription,prog1,01,XXXX,9(10),,,YYYY,,10\n" +
+		      "dataDescription,prog1,01,XXXX,9(10),,,YYYY,,10\n" ));
     }
 
 
@@ -284,8 +284,8 @@ public class App2Test
 	Cobol85Parser parser = App.createParser(is);
 	App.printDataDescriptionInfo("prog1",parser);
 	assertThat(systemOutRule.getLog(),
-		   is("dataDescription,prog1,01,XXXX,9(10),,,YYYY,\n" +
-		      "dataDescription,prog1,01,XXXX,9(10),,,YYYY,\n" ));
+		   is("dataDescription,prog1,01,XXXX,9(10),,,YYYY,,10\n" +
+		      "dataDescription,prog1,01,XXXX,9(10),,,YYYY,,10\n" ));
     }
     
 

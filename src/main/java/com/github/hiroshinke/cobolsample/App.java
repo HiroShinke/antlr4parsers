@@ -28,9 +28,6 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
-
 import com.github.hiroshinke.cobolpp.CobolPreprocessor;
 import static com.github.hiroshinke.cobolsample.AntlrUtil.*;
 import static com.github.hiroshinke.cobolsample.ParserCommon.*;
@@ -45,7 +42,7 @@ class App {
 	String assignmentName;
 	List<String> recNames;
     }
-    
+
     public static void main(String[] args) throws Exception {
 
 
@@ -202,7 +199,10 @@ class App {
 	    String redefines = xpathSubTreeText(parser,e,"*/dataRedefinesClause/dataName");
 	    String occurs = xpathSubTreeText(parser,e,"*/dataOccursClause/integerLiteral");
 	    
-	    printOutput("dataDescription",file,level,name,pict,usage,value,redefines,occurs);
+	    printOutput("dataDescription",file,
+			level,name,pict,usage,value,redefines,occurs,
+			Integer.toString(DataItem.calculateSize(usage,pict))
+			);
 	}
     }
 

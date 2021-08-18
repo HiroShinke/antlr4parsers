@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Collection;
 import java.util.stream.Collectors;
+import java.util.Deque;
+import java.util.ArrayDeque;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -186,18 +188,44 @@ class App {
 
 	Collection<ParseTree> entries = xpathSubTrees(parser,tree,"//dataDescriptionEntry/*");
 
+	Deque<DataItem> stack = new ArrayDeque<DataItem>();
+
 	for( ParseTree e : entries ){
 
 	    String level = xpathSubTreeText(parser,e,List.of("*/INTEGERLITERAL",
+							     "*/LEVEL_NUMBER_77",
 							     "*/LEVEL_NUMBER_88",
 							     "*/LEVEL_NUMBER_66"));
 	    String name  = xpathSubTreeText(parser,e,List.of("*/dataName",
 							     "*/conditionName"));
 	    String pict  = xpathSubTreeText(parser,e,"*//pictureString");
 	    String usage = xpathSubTreeText(parser,e,"*/dataUsageClause");
+	    if( 5 < usage.length() && usage.substring(0,5).equals("USAGE") ){
+		usage = usage.substring(5);
+		if( 2 < usage.length() && usage.substring(0,2).equals("IS") ){
+		    usage = usage.substring(2);
+		}
+	    }
 	    String value = xpathSubTreeText(parser,e,"*//dataValueIntervalFrom");
 	    String redefines = xpathSubTreeText(parser,e,"*/dataRedefinesClause/dataName");
 	    String occurs = xpathSubTreeText(parser,e,"*/dataOccursClause/integerLiteral");
+
+	    if( ! level.equals("88") && ! level.equals("66") && ! level.equals("77") ){
+
+		DataItem item = new DataItem(level,
+					     name,
+					     pict,
+					     usage,
+					     value,
+					     redefines,
+					     occurs);
+
+		while( 0 < stack.size() &&
+		       item.level < stack.peekFirst().level ){
+		    stack.removeFirst();
+		}
+		stack.addFirst(item);
+	    }
 	    
 	    printOutput("dataDescription",file,
 			level,name,pict,usage,value,redefines,occurs,

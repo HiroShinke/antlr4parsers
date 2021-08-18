@@ -9,7 +9,7 @@ import java.util.regex.Matcher;
 public class DataItem {
 
     String file;
-    String level;
+    int   level;
     String name;
     String pict;
     String usage;
@@ -20,6 +20,26 @@ public class DataItem {
     int    numOfChar;
     int    size;
     String copymem;
+
+
+    public DataItem(String level,
+		    String name,
+		    String pict,
+		    String usage,
+		    String value,
+		    String redefines,
+		    String occurs) {
+
+	this.level = Integer.valueOf(level);
+	this.name  = name;
+	this.pict  = pict;
+	this.usage = usage;
+	this.value = value;
+	this.redefines = redefines;
+	this.occurs = occurs;
+	this.size   = calculateSize(usage,pict);
+	this.numOfChar   = pictureCountChar(pict);	
+    }
 
     static int calculateSize(String usage,String pict){
 
@@ -32,7 +52,10 @@ public class DataItem {
 	else if( usage.equals("BINARY") ||
 		 usage.equals("COMP") ||
 		 usage.equals("COMP-4") ||
-		 usage.equals("COMP-5") ){
+		 usage.equals("COMP-5") ||
+		 usage.equals("COMPUTATIONAL") ||
+		 usage.equals("COMPUTATIONAL-4") ||
+		 usage.equals("COMPUTATIONAL-5") ){
 
 	    if( cnum <= 4 ){
 		return 2;
@@ -47,11 +70,16 @@ public class DataItem {
 		throw new RuntimeException("can't come here");
 	    }
 	}
-	else if( usage.equals("COMP-3") ){
+	else if( usage.equals("COMP-3") ||
+		 usage.equals("COMPUTATIONAL-3") ){
 	    return cnum % 2 == 0 ? (cnum+2)/2 : (cnum+1)/2;
 	}
+	else if( usage.equals("INDEX") ){
+	    // TODO : correct calculation
+	    return 0;
+	}
 	else {
-	    throw new RuntimeException("not supported yet");
+	    throw new RuntimeException("not supported yet: usage=" + usage );
 	}
 	    
     }
@@ -82,8 +110,7 @@ public class DataItem {
 	    pos++;
 	    char d = (pos<len) ? pict.charAt(pos) : '\0';
 	    if( d == '(' ){
-		ParseState<Integer> ret =
-		    parseMultiplier(pict,pos);
+		ParseState<Integer> ret = parseMultiplier(pict,pos);
 		pos  = ret.pos;
 		mult = ret.value;
 	    }

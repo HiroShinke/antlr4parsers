@@ -11,34 +11,74 @@ public class DataItem {
     String file;
     int   level;
     String name;
-    String pict;
     String usage;
-    String value;
     String redefines;
     String occurs;
     int    offset;
-    int    numOfChar;
-    int    size;
     String copymem;
 
 
-    public DataItem(String level,
-		    String name,
-		    String pict,
-		    String usage,
-		    String value,
-		    String redefines,
-		    String occurs) {
+    public static DataItem createItem(String level,
+				      String name,
+				      String pict,
+				      String usage,
+				      String value,
+				      String redefines,
+				      String occurs){
+	if( pict.isEmpty() ){
+	    return new GroupItem(level,name,usage,redefines,occurs);
+	}
+	else {
+	    return new BasicItem(level,name,pict,usage,value,redefines,occurs);
+	}
+
+    }
+    
+    static class GroupItem extends DataItem {
+
+	public GroupItem(String level,
+			 String name,
+			 String usage,
+			 String redefines,
+			 String occurs){
+	    super(level,name,usage,redefines,occurs);
+	}
+    }
+    
+    static class BasicItem extends DataItem {
+
+	String pict;
+	String value;
+	int    numOfChar;
+	int    size;
+	
+	public BasicItem(String level,
+			 String name,
+			 String pict,
+			 String usage,
+			 String value,
+			 String redefines,
+			 String occurs){
+	    super(level,name,usage,redefines,occurs);
+	    this.pict = pict;
+	    this.value = value;
+	    this.size   = calculateSize(usage,pict);
+	    this.numOfChar   = pictureCountChar(pict);	
+	}
+    }
+    
+
+    DataItem(String level,
+	     String name,
+	     String usage,
+	     String redefines,
+	     String occurs) {
 
 	this.level = Integer.valueOf(level);
 	this.name  = name;
-	this.pict  = pict;
 	this.usage = usage;
-	this.value = value;
 	this.redefines = redefines;
 	this.occurs = occurs;
-	this.size   = calculateSize(usage,pict);
-	this.numOfChar   = pictureCountChar(pict);	
     }
 
     static int calculateSize(String usage,String pict){

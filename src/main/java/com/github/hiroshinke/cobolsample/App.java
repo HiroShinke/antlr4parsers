@@ -212,13 +212,13 @@ class App {
 
 	    if( ! level.equals("88") && ! level.equals("66") && ! level.equals("77") ){
 
-		DataItem item = new DataItem(level,
-					     name,
-					     pict,
-					     usage,
-					     value,
-					     redefines,
-					     occurs);
+		DataItem item = DataItem.createItem(level,
+						    name,
+						    pict,
+						    usage,
+						    value,
+						    redefines,
+						    occurs);
 
 		while( 0 < stack.size() &&
 		       item.level < stack.peekFirst().level ){

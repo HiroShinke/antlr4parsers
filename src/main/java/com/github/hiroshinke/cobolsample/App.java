@@ -221,8 +221,12 @@ class App {
 						    occurs);
 
 		while( 0 < stack.size() &&
-		       item.level < stack.peekFirst().level ){
+		       item.level <= stack.peekFirst().level ){
 		    stack.removeFirst();
+		}
+
+		if( 0 < stack.size() ){
+		    stack.peekFirst().add(item);
 		}
 		stack.addFirst(item);
 	    }

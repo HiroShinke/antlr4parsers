@@ -2,11 +2,13 @@
 
 package com.github.hiroshinke.cobolsample;
 
+import java.util.ArrayList;
+
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
 
-public class DataItem {
+public abstract class DataItem {
 
     String file;
     int   level;
@@ -16,7 +18,9 @@ public class DataItem {
     String occurs;
     int    offset;
     String copymem;
+    int    size;
 
+    DataItem parent;
 
     public static DataItem createItem(String level,
 				      String name,
@@ -36,6 +40,9 @@ public class DataItem {
     
     static class GroupItem extends DataItem {
 
+	ArrayList<DataItem> children = new ArrayList<DataItem>();
+	
+
 	public GroupItem(String level,
 			 String name,
 			 String usage,
@@ -43,6 +50,14 @@ public class DataItem {
 			 String occurs){
 	    super(level,name,usage,redefines,occurs);
 	}
+
+	@Override
+	DataItem add(DataItem item){
+	    children.add(item);
+	    item.parent = this;
+	    return this;
+	}
+
     }
     
     static class BasicItem extends DataItem {
@@ -50,7 +65,6 @@ public class DataItem {
 	String pict;
 	String value;
 	int    numOfChar;
-	int    size;
 	
 	public BasicItem(String level,
 			 String name,
@@ -65,6 +79,12 @@ public class DataItem {
 	    this.size   = calculateSize(usage,pict);
 	    this.numOfChar   = pictureCountChar(pict);	
 	}
+
+	@Override
+	DataItem add(DataItem item){
+	    throw new RuntimeException("cant come here");
+	}
+	
     }
     
 
@@ -80,6 +100,8 @@ public class DataItem {
 	this.redefines = redefines;
 	this.occurs = occurs;
     }
+
+    abstract DataItem add(DataItem item);
 
     static int calculateSize(String usage,String pict){
 

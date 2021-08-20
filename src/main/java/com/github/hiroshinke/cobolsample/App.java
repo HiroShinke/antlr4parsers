@@ -189,6 +189,7 @@ class App {
 	Collection<ParseTree> entries = xpathSubTrees(parser,tree,"//dataDescriptionEntry/*");
 
 	Deque<DataItem> stack = new ArrayDeque<DataItem>();
+	List<DataItem> list = new ArrayList<DataItem>();
 
 	for( ParseTree e : entries ){
 
@@ -212,30 +213,52 @@ class App {
 
 	    if( ! level.equals("88") && ! level.equals("66") && ! level.equals("77") ){
 
-		DataItem item = DataItem.createItem(level,
+		DataItem item = DataItem.createItem(file,
+						    level,
 						    name,
 						    pict,
 						    usage,
 						    value,
 						    redefines,
 						    occurs);
-
-		while( 0 < stack.size() &&
-		       item.level <= stack.peekFirst().level ){
-		    stack.removeFirst();
+		DataItem lastRemoved = null;
+		while( 0 < stack.size() && item.level <= stack.peekFirst().level ){
+		    lastRemoved = stack.removeFirst();
+		    lastRemoved.getSize();
+		    if( lastRemoved.level == 1 ) {
+			list.add(lastRemoved);
+		    }
 		}
 
-		if( 0 < stack.size() ){
-		    stack.peekFirst().add(item);
+		if( stack.size() == 0 ){
+		    item.offset = 0;
 		}
+		else {
+		    if( lastRemoved != null ){
+			item.offset = lastRemoved.offset + lastRemoved.getSize();
+		    }
+		    else {
+			item.offset = stack.peekFirst().offset;
+		    }
+		    stack.peekFirst().add(item);		    
+		}
+
 		stack.addFirst(item);
 	    }
-	    
-	    printOutput("dataDescription",file,
-			level,name,pict,usage,value,redefines,occurs,
-			Integer.toString(DataItem.calculateSize(usage,pict))
-			);
 	}
+
+	while( 0 < stack.size() ){
+	    DataItem removed = stack.removeFirst();
+	    removed.getSize();
+	    if( removed.level == 1 ) {
+		list.add(removed);
+	    }
+	}
+
+	for(DataItem d : list){
+	    printOutput(d.makeDescription());
+	}
+
     }
 
     

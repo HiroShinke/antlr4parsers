@@ -22,7 +22,8 @@ public abstract class DataItem {
 
     DataItem parent;
 
-    public static DataItem createItem(String level,
+    public static DataItem createItem(String file,
+				      String level,
 				      String name,
 				      String pict,
 				      String usage,
@@ -30,10 +31,10 @@ public abstract class DataItem {
 				      String redefines,
 				      String occurs){
 	if( pict.isEmpty() ){
-	    return new GroupItem(level,name,usage,redefines,occurs);
+	    return new GroupItem(file,level,name,usage,redefines,occurs);
 	}
 	else {
-	    return new BasicItem(level,name,pict,usage,value,redefines,occurs);
+	    return new BasicItem(file,level,name,pict,usage,value,redefines,occurs);
 	}
 
     }
@@ -41,14 +42,16 @@ public abstract class DataItem {
     static class GroupItem extends DataItem {
 
 	ArrayList<DataItem> children = new ArrayList<DataItem>();
-	
 
-	public GroupItem(String level,
+	boolean requireSizeUpdate = true;
+
+	public GroupItem(String file,
+			 String level,
 			 String name,
 			 String usage,
 			 String redefines,
 			 String occurs){
-	    super(level,name,usage,redefines,occurs);
+	    super(file,level,name,usage,redefines,occurs);
 	}
 
 	@Override
@@ -58,6 +61,39 @@ public abstract class DataItem {
 	    return this;
 	}
 
+	@Override
+	int getSize(){
+	    if( requireSizeUpdate ){
+		size = 0;
+		for(DataItem i: children){
+		    size += i.getSize();
+		}
+		requireSizeUpdate = false;
+	    }
+	    return size;
+	}
+
+	@Override
+	String [] makeDescription(){
+
+	    return new String[] {
+		"dataDescription",		
+		file,
+		String.format("%02d",level),		
+		name,
+		"",
+		usage,
+		"",
+		redefines,
+		occurs,
+		Integer.toString(offset),
+		Integer.toString(size)
+	    };
+
+
+	}
+
+	
     }
     
     static class BasicItem extends DataItem {
@@ -66,14 +102,15 @@ public abstract class DataItem {
 	String value;
 	int    numOfChar;
 	
-	public BasicItem(String level,
+	public BasicItem(String file,
+			 String level,
 			 String name,
 			 String pict,
 			 String usage,
 			 String value,
 			 String redefines,
 			 String occurs){
-	    super(level,name,usage,redefines,occurs);
+	    super(file,level,name,usage,redefines,occurs);
 	    this.pict = pict;
 	    this.value = value;
 	    this.size   = calculateSize(usage,pict);
@@ -84,16 +121,41 @@ public abstract class DataItem {
 	DataItem add(DataItem item){
 	    throw new RuntimeException("cant come here");
 	}
+
+	@Override
+	int getSize(){
+	    return size;
+	}
+
+	@Override
+	String [] makeDescription(){
+
+	    return new String[] {
+		"dataDescription",
+		file,
+		String.format("%02d",level),
+		name,
+		pict,
+		usage,
+		value,
+		redefines,
+		occurs,
+		Integer.toString(offset),		
+		Integer.toString(size)
+	    };
+
+	}
 	
     }
     
 
-    DataItem(String level,
+    DataItem(String file,
+	     String level,
 	     String name,
 	     String usage,
 	     String redefines,
 	     String occurs) {
-
+	this.file  = file;
 	this.level = Integer.valueOf(level);
 	this.name  = name;
 	this.usage = usage;
@@ -102,6 +164,8 @@ public abstract class DataItem {
     }
 
     abstract DataItem add(DataItem item);
+    abstract int getSize();
+    abstract String[] makeDescription();
 
     static int calculateSize(String usage,String pict){
 

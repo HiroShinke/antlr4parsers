@@ -3,7 +3,7 @@
 package com.github.hiroshinke.cobolsample;
 
 import java.util.ArrayList;
-
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
@@ -93,7 +93,13 @@ public abstract class DataItem {
 
 	}
 
-	
+	@Override
+	void recursiveDoDataItem( Consumer<DataItem> proc ) {
+	    proc.accept(this);
+	    for(DataItem c: children){
+		c.recursiveDoDataItem(proc);
+	    }
+	}
     }
     
     static class BasicItem extends DataItem {
@@ -145,6 +151,11 @@ public abstract class DataItem {
 	    };
 
 	}
+
+	@Override
+	void recursiveDoDataItem( Consumer<DataItem> proc ) {
+	    proc.accept(this);
+	}
 	
     }
     
@@ -166,6 +177,7 @@ public abstract class DataItem {
     abstract DataItem add(DataItem item);
     abstract int getSize();
     abstract String[] makeDescription();
+    abstract void recursiveDoDataItem( Consumer<DataItem> proc );
 
     static int calculateSize(String usage,String pict){
 

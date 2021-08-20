@@ -256,7 +256,7 @@ class App {
 	}
 
 	for(DataItem d : list){
-	    printOutput(d.makeDescription());
+	    d.recursiveDoDataItem(x -> printOutput(x.makeDescription()));
 	}
 
     }

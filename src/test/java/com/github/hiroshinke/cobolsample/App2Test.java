@@ -64,7 +64,7 @@ public class App2Test
 	Cobol85Parser parser = App.createParser(is);
 	App.printDataDescriptionInfo("prog1",parser);
 	assertThat(systemOutRule.getLog(),
-		   is("dataDescription,prog1,01,XXXX,9(10),,,,,10\n"));
+		   is("dataDescription,prog1,01,XXXX,9(10),,,,,0,10\n"));
     }
 
     @Test
@@ -80,7 +80,7 @@ public class App2Test
 	Cobol85Parser parser = App.createParser(is);
 	App.printDataDescriptionInfo("prog1",parser);
 	assertThat(systemOutRule.getLog(),
-		   is("dataDescription,prog1,01,XXXX,XXX,,,,,3\n"));
+		   is("dataDescription,prog1,01,XXXX,XXX,,,,,0,3\n"));
     }
 
     @Test
@@ -96,7 +96,7 @@ public class App2Test
 	Cobol85Parser parser = App.createParser(is);
 	App.printDataDescriptionInfo("prog1",parser);
 	assertThat(systemOutRule.getLog(),
-		   is("dataDescription,prog1,01,XXXX,S999V999,,,,,6\n"));
+		   is("dataDescription,prog1,01,XXXX,S999V999,,,,,0,6\n"));
     }
 
     @Test
@@ -112,7 +112,7 @@ public class App2Test
 	Cobol85Parser parser = App.createParser(is);
 	App.printDataDescriptionInfo("prog1",parser);
 	assertThat(systemOutRule.getLog(),
-		   is("dataDescription,prog1,01,XXXX,999.999,,,,,6\n"));
+		   is("dataDescription,prog1,01,XXXX,999.999,,,,,0,6\n"));
     }
 
     @Test
@@ -129,7 +129,7 @@ public class App2Test
 	Cobol85Parser parser = App.createParser(is);
 	App.printDataDescriptionInfo("prog1",parser);
 	assertThat(systemOutRule.getLog(),
-		   is("dataDescription,prog1,01,XXXX,X(10),,,,,10\n"));
+		   is("dataDescription,prog1,01,XXXX,X(10),,,,,0,10\n"));
     }
     
     @Test
@@ -145,7 +145,7 @@ public class App2Test
 	Cobol85Parser parser = App.createParser(is);
 	App.printDataDescriptionInfo("prog1",parser);
 	assertThat(systemOutRule.getLog(),
-		   is("dataDescription,prog1,01,XXXX,9(10),,,,10,10\n"));
+		   is("dataDescription,prog1,01,XXXX,9(10),,,,10,0,10\n"));
     }
     @Test
     public void testDataDesc3() throws Exception 
@@ -160,7 +160,7 @@ public class App2Test
 	Cobol85Parser parser = App.createParser(is);
 	App.printDataDescriptionInfo("prog1",parser);
 	assertThat(systemOutRule.getLog(),
-		   is("dataDescription,prog1,01,XXXX,9(10),,'ssss',,,10\n"));
+		   is("dataDescription,prog1,01,XXXX,9(10),,'ssss',,,0,10\n"));
     }
 
     @Test
@@ -176,7 +176,7 @@ public class App2Test
 	Cobol85Parser parser = App.createParser(is);
 	App.printDataDescriptionInfo("prog1",parser);
 	assertThat(systemOutRule.getLog(),
-		   is("dataDescription,prog1,01,,9(10),,,,,10\n"));
+		   is("dataDescription,prog1,01,,9(10),,,,,0,10\n"));
     }
 
     @Test
@@ -192,7 +192,7 @@ public class App2Test
 	Cobol85Parser parser = App.createParser(is);
 	App.printDataDescriptionInfo("prog1",parser);
 	assertThat(systemOutRule.getLog(),
-		   is("dataDescription,prog1,01,XXXX,S9(10),COMP,,,,8\n"));
+		   is("dataDescription,prog1,01,XXXX,S9(10),COMP,,,,0,8\n"));
     }
 
     @Test
@@ -208,7 +208,7 @@ public class App2Test
 	Cobol85Parser parser = App.createParser(is);
 	App.printDataDescriptionInfo("prog1",parser);
 	assertThat(systemOutRule.getLog(),
-		   is("dataDescription,prog1,01,XXXX,9(10),,,YYYY,,10\n"));
+		   is("dataDescription,prog1,01,XXXX,9(10),,,YYYY,,0,10\n"));
     }
 
 
@@ -230,7 +230,7 @@ public class App2Test
 	Cobol85Parser parser = App.createParser(is);
 	App.printDataDescriptionInfo("prog1",parser);
 	assertThat(systemOutRule.getLog(),
-		   is("dataDescription,prog1,01,XXXX,9(10),,,YYYY,,10\n"));
+		   is("dataDescription,prog1,01,XXXX,9(10),,,YYYY,,0,10\n"));
     }
 
     @Test
@@ -256,8 +256,8 @@ public class App2Test
 	Cobol85Parser parser = App.createParser(is);
 	App.printDataDescriptionInfo("prog1",parser);
 	assertThat(systemOutRule.getLog(),
-		   is("dataDescription,prog1,01,XXXX,9(10),,,YYYY,,10\n" +
-		      "dataDescription,prog1,01,XXXX,9(10),,,YYYY,,10\n" ));
+		   is("dataDescription,prog1,01,XXXX,9(10),,,YYYY,,0,10\n" +
+		      "dataDescription,prog1,01,XXXX,9(10),,,YYYY,,0,10\n" ));
     }
 
 
@@ -284,9 +284,35 @@ public class App2Test
 	Cobol85Parser parser = App.createParser(is);
 	App.printDataDescriptionInfo("prog1",parser);
 	assertThat(systemOutRule.getLog(),
-		   is("dataDescription,prog1,01,XXXX,9(10),,,YYYY,,10\n" +
-		      "dataDescription,prog1,01,XXXX,9(10),,,YYYY,,10\n" ));
+		   is("dataDescription,prog1,01,XXXX,9(10),,,YYYY,,0,10\n" +
+		      "dataDescription,prog1,01,XXXX,9(10),,,YYYY,,0,10\n" ));
     }
+
+
+    @Test
+    public void testDataDescGroup1() throws Exception 
+    {
+	String src = cobolTemplate
+	    (
+	     "01 XXX-REC. \n" +
+	     "03 XXXX PIC 9(10). \n" + 
+	     "03 YYYY PIC 9(10). \n"+
+	     "03 ZZZZ PIC 9(10). \n",
+	     "CALL 'aaaa' USING XXXX.\n" +
+	     "MOVE 1 TO XXXX.\n"
+	     );
+	InputStream is = toInputStream(src);
+	Cobol85Parser parser = App.createParser(is);
+	App.printDataDescriptionInfo("prog1",parser);
+	assertThat(systemOutRule.getLog(),
+		   is("dataDescription,prog1,01,XXX-REC,,,,,,0,30\n" +
+		      "dataDescription,prog1,03,XXXX,9(10),,,,,0,10\n" +
+		      "dataDescription,prog1,03,YYYY,9(10),,,,,10,10\n" +
+		      "dataDescription,prog1,03,ZZZZ,9(10),,,,,20,10\n"
+		      ));
+    }
+
+
     
 
     @Test

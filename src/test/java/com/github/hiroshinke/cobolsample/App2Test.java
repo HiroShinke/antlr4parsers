@@ -313,6 +313,88 @@ public class App2Test
     }
 
 
+    @Test
+    public void testDataDescGroup2() throws Exception 
+    {
+	String src = cobolTemplate
+	    (
+	     "01 XXX-REC. \n" +
+	     "03 XXXX. \n" +
+	     "05 XXXX1 PIC 9(5). \n" +
+	     "05 XXXX2 PIC 9(5). \n" +	     
+	     "03 YYYY PIC 9(10). \n"+
+	     "03 ZZZZ PIC 9(10). \n",
+	     "CALL 'aaaa' USING XXXX.\n" +
+	     "MOVE 1 TO XXXX.\n"
+	     );
+	InputStream is = toInputStream(src);
+	Cobol85Parser parser = App.createParser(is);
+	App.printDataDescriptionInfo("prog1",parser);
+	assertThat(systemOutRule.getLog(),
+		   is("dataDescription,prog1,01,XXX-REC,,,,,,0,30\n" +
+		      "dataDescription,prog1,03,XXXX,,,,,,0,10\n" +
+		      "dataDescription,prog1,05,XXXX1,9(5),,,,,0,5\n" +
+		      "dataDescription,prog1,05,XXXX2,9(5),,,,,5,5\n" +
+		      "dataDescription,prog1,03,YYYY,9(10),,,,,10,10\n" +
+		      "dataDescription,prog1,03,ZZZZ,9(10),,,,,20,10\n"
+		      ));
+    }
+
+
+    @Test
+    public void testDataDescGroup3() throws Exception 
+    {
+	String src = cobolTemplate
+	    (
+	     "01 XXX-REC. \n" +
+	     "03 XXXX PIC 9(10). \n" +
+	     "03 YYYY . \n"+
+	     "05 YYYY1 PIC 9(5). \n" +
+	     "05 YYYY2 PIC 9(5). \n" +	     
+	     "03 ZZZZ PIC 9(10). \n",
+	     "CALL 'aaaa' USING XXXX.\n" +
+	     "MOVE 1 TO XXXX.\n"
+	     );
+	InputStream is = toInputStream(src);
+	Cobol85Parser parser = App.createParser(is);
+	App.printDataDescriptionInfo("prog1",parser);
+	assertThat(systemOutRule.getLog(),
+		   is("dataDescription,prog1,01,XXX-REC,,,,,,0,30\n" +
+		      "dataDescription,prog1,03,XXXX,9(10),,,,,0,10\n" +
+		      "dataDescription,prog1,03,YYYY,,,,,,10,10\n" +
+		      "dataDescription,prog1,05,YYYY1,9(5),,,,,10,5\n" +
+		      "dataDescription,prog1,05,YYYY2,9(5),,,,,15,5\n" +
+		      "dataDescription,prog1,03,ZZZZ,9(10),,,,,20,10\n"
+		      ));
+    }
+
+
+    @Test
+    public void testDataDescGroup4() throws Exception 
+    {
+	String src = cobolTemplate
+	    (
+	     "01 XXX-REC. \n" +
+	     "03 XXXX PIC 9(10). \n" +
+	     "03 YYYY PIC 9(10). \n"+
+	     "03 ZZZZ. \n" +
+	     "05 ZZZZ1 PIC 9(5). \n" +
+	     "05 ZZZZ2 PIC 9(5). \n",
+	     "CALL 'aaaa' USING XXXX.\n" +
+	     "MOVE 1 TO XXXX.\n"
+	     );
+	InputStream is = toInputStream(src);
+	Cobol85Parser parser = App.createParser(is);
+	App.printDataDescriptionInfo("prog1",parser);
+	assertThat(systemOutRule.getLog(),
+		   is("dataDescription,prog1,01,XXX-REC,,,,,,0,30\n" +
+		      "dataDescription,prog1,03,XXXX,9(10),,,,,0,10\n" +
+		      "dataDescription,prog1,03,YYYY,9(10),,,,,10,10\n" +
+		      "dataDescription,prog1,03,ZZZZ,,,,,,20,10\n" +
+		      "dataDescription,prog1,05,ZZZZ1,9(5),,,,,20,5\n" +
+		      "dataDescription,prog1,05,ZZZZ2,9(5),,,,,25,5\n"
+		      ));
+    }
     
 
     @Test

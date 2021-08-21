@@ -3,6 +3,9 @@
 package com.github.hiroshinke.cobolsample;
 
 import java.util.ArrayList;
+import java.util.ArrayDeque;
+import java.util.List;
+import java.util.Deque;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -12,6 +15,7 @@ public abstract class DataItem {
 
     String file;
     int   level;
+    String levelStr;
     String name;
     String usage;
     String redefines;
@@ -21,6 +25,7 @@ public abstract class DataItem {
     int    size;
 
     DataItem parent;
+
 
     public static DataItem createItem(String file,
 				      String level,
@@ -36,8 +41,56 @@ public abstract class DataItem {
 	else {
 	    return new BasicItem(file,level,name,pict,usage,value,redefines,occurs);
 	}
-
     }
+
+    
+    public static class Stack {
+
+	Deque<DataItem> stack = new ArrayDeque<DataItem>();
+	List<DataItem> list = new ArrayList<DataItem>();
+
+	void registerItem(DataItem item) {
+
+	    DataItem lastRemoved = null;
+	    while( 0 < stack.size() && item.level <= stack.peekFirst().level ){
+		lastRemoved = stack.removeFirst();
+		lastRemoved.getSize();
+		if( lastRemoved.level == 1 ) {
+		    list.add(lastRemoved);
+		}
+	    }
+	    
+	    if( stack.size() == 0 ){
+		item.offset = 0;
+	    }
+	    else {
+		if( lastRemoved != null ){
+		    item.offset = lastRemoved.offset + lastRemoved.getSize();
+		}
+		else {
+		    item.offset = stack.peekFirst().offset;
+		}
+		stack.peekFirst().add(item);		    
+	    }
+	    
+	    stack.addFirst(item);
+	}
+
+	void rewindAll() {
+	    while( 0 < stack.size() ){
+		DataItem removed = stack.removeFirst();
+		removed.getSize();
+		if( removed.level == 1 ) {
+		    list.add(removed);
+		}
+	    }
+	}
+
+	List<DataItem> getList() { return list; }
+    }
+
+
+
     
     static class GroupItem extends DataItem {
 
@@ -168,6 +221,7 @@ public abstract class DataItem {
 	     String occurs) {
 	this.file  = file;
 	this.level = Integer.valueOf(level);
+	this.levelStr = level;
 	this.name  = name;
 	this.usage = usage;
 	this.redefines = redefines;

@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.Collection;
 import java.util.stream.Collectors;
 import java.util.Deque;
-import java.util.ArrayDeque;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -188,8 +187,7 @@ class App {
 
 	Collection<ParseTree> entries = xpathSubTrees(parser,tree,"//dataDescriptionEntry/*");
 
-	Deque<DataItem> stack = new ArrayDeque<DataItem>();
-	List<DataItem> list = new ArrayList<DataItem>();
+	DataItem.Stack stack = new DataItem.Stack();
 
 	for( ParseTree e : entries ){
 
@@ -221,39 +219,13 @@ class App {
 						    value,
 						    redefines,
 						    occurs);
-		DataItem lastRemoved = null;
-		while( 0 < stack.size() && item.level <= stack.peekFirst().level ){
-		    lastRemoved = stack.removeFirst();
-		    lastRemoved.getSize();
-		    if( lastRemoved.level == 1 ) {
-			list.add(lastRemoved);
-		    }
-		}
 
-		if( stack.size() == 0 ){
-		    item.offset = 0;
-		}
-		else {
-		    if( lastRemoved != null ){
-			item.offset = lastRemoved.offset + lastRemoved.getSize();
-		    }
-		    else {
-			item.offset = stack.peekFirst().offset;
-		    }
-		    stack.peekFirst().add(item);		    
-		}
-
-		stack.addFirst(item);
+		stack.registerItem(item);
 	    }
 	}
 
-	while( 0 < stack.size() ){
-	    DataItem removed = stack.removeFirst();
-	    removed.getSize();
-	    if( removed.level == 1 ) {
-		list.add(removed);
-	    }
-	}
+	stack.rewindAll();
+	List<DataItem> list = stack.getList();
 
 	for(DataItem d : list){
 	    d.recursiveDoDataItem(x -> printOutput(x.makeDescription()));

@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.stream.Collectors;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -116,7 +117,15 @@ public class CobolPreprocessor  {
 	}
     }
 
-
+    static class ReplaceSpec {
+	String a;
+	String b;
+	ReplaceSpec(String a, String b){
+	    this.a = a;
+	    this.b = b;
+	}
+    }
+    
     public InputStream preprocessStream(InputStream is) throws Exception {
 
 	Cobol85PreprocessorParser parser = createParser(is);
@@ -143,6 +152,19 @@ public class CobolPreprocessor  {
 		    System.err.println( "copyStatement expanded");
 		    System.err.println( srcString(rc,65) );
 		    String copymem = xpathSubTreeText(parser,s,"*/copySource");
+
+		    Collection<ParseTree> replaceClauses =
+			xpathSubTrees(parser,s,"*/replaceClause");
+		    List<ReplaceSpec> replaceSpec =
+			replaceClauses.stream()
+			.map( t ->
+			      {
+				  String a = xpathSubTreeText(parser,t,"*/relaceable");
+				  String b = xpathSubTreeText(parser,t,"*/relacement");
+				  return new ReplaceSpec(a,b);
+			      })
+			.collect(Collectors.toList());
+						 
 		    processCopySentence(copymem, buff);
 		}
 		else if( ruleName.equals("replaceOffStatement") ){

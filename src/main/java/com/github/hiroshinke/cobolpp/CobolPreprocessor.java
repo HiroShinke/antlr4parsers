@@ -317,8 +317,8 @@ public class CobolPreprocessor  {
 	SrcText t2 = texts.get(pos);
 	
 	int lineDiff1     = t2.line - t1.line;
-	int startPosDiff1 = t2.startPos - t1.startPos;
-
+	int startPosDiff1 = t2.startPos - t1.startPos ;
+	
 	for(SrcText t: to){
 	    t.replaced = true;
 	    t.line = t.line + lineDiff1;
@@ -339,7 +339,9 @@ public class CobolPreprocessor  {
 	    SrcText t4 = texts.get(pos + from.size() -1);
 
 	    int lineDiff2 = t3.line - t4.line;
-	    int startPosDiff2 = t3.startPos - t4.startPos;
+	    int startPosDiff2 =
+		t3.startPos + t3.text.length()
+		- t4.startPos - t4.text.length();
 
 	    for(SrcText t: subAfter){
 		t.replaced = true;

@@ -238,12 +238,10 @@ public class AppTest
 				    StandardCharsets.UTF_8);
 
 	InputStream is = prep.preprocessStream
-	    (toInputStream
-	     (
-	      "COPY YYYY REPLACING AAAA BY XXXX.\n" +
-	      "01 YYYY PIC X(10).\n"
-	      )
-	     );
+	    (toInputStream(
+	     "COPY YYYY REPLACING AAAA BY XXXX.\n" +
+	     "01 YYYY PIC X(10).\n"
+			   ));
 	BufferedReader rd = bufferedReader(is);
 	String src1 = rd.readLine();
 	String src2 = rd.readLine();
@@ -255,6 +253,64 @@ public class AppTest
 	assertThat(src4,is(fillToWidth("01 YYYY PIC X(10).")));	
     }
     
+
+    @Test
+    public void testReplacing3() throws Exception 
+    {
+	CobolPreprocessor prep
+	    = new CobolPreprocessor(tempFolder.getRoot().getPath());
+
+	File file1 = tempFolder.newFile("YYYY.cbl");
+
+	FileUtils.writeStringToFile(file1,
+				    "123456 01 BBBB PIC X(10). \n" + 
+				    "123456 01 BBBB PIC X(10). \n" +
+				    "123456 01 BBBB PIC X(10). \n",
+				    StandardCharsets.UTF_8);
+
+	InputStream is = prep.preprocessStream
+	(toInputStream(
+	      "COPY YYYY REPLACING AAAA BY XXXX \n" +
+	      "                    BBBB BY YYYY. \n" +
+	      "01 YYYY PIC X(10).\n"
+		       ));
+	BufferedReader rd = bufferedReader(is);
+	String src1 = rd.readLine();
+	String src2 = rd.readLine();
+	String src3 = rd.readLine();
+	String src4 = rd.readLine();
+	assertThat(src1,is(fillToWidth("01 YYYY PIC X(10).")));	
+	assertThat(src2,is(fillToWidth("01 YYYY PIC X(10).")));
+	assertThat(src3,is(fillToWidth("01 YYYY PIC X(10).")));	
+	assertThat(src4,is(fillToWidth("01 YYYY PIC X(10).")));	
+    }
+    
+    @Test
+    public void testReplacing4() throws Exception 
+    {
+	CobolPreprocessor prep
+	    = new CobolPreprocessor(tempFolder.getRoot().getPath());
+
+	File file1 = tempFolder.newFile("YYYY.cbl");
+
+	FileUtils.writeStringToFile(file1,
+				    "123456 01 AAAA PIC X(10). \n",
+				    StandardCharsets.UTF_8);
+
+	InputStream is = prep.preprocessStream
+	    (toInputStream
+	     (
+	      "COPY YYYY REPLACING AAAA BY XXXXX.\n" +
+	      "01 YYYY PIC X(10).\n"
+	      )
+	     );
+	BufferedReader rd = bufferedReader(is);
+	String src1 = rd.readLine();
+	String src2 = rd.readLine();
+	assertThat(src1,is(fillToWidth("01 XXXXX PIC X(10).")));	
+	assertThat(src2,is(fillToWidth("01 YYYY PIC X(10).")));	
+    }
+
     
     
     

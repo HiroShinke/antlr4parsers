@@ -214,7 +214,7 @@ public class AntlrUtil {
     }
 
 
-    static void terminalNodeHelper(List<TerminalNode> buff,
+    public static void terminalNodeHelper(List<TerminalNode> buff,
 					  ParseTree tree){
 
 	if( tree instanceof TerminalNode ){
@@ -286,4 +286,7 @@ public class AntlrUtil {
 
 	return buff.toString();
     }
+
+
+
 }

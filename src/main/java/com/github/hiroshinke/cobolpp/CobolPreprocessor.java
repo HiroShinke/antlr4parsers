@@ -10,6 +10,7 @@ import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.pattern.ParseTreePattern;
 import org.antlr.v4.runtime.tree.pattern.ParseTreeMatch;
@@ -91,9 +92,10 @@ public class CobolPreprocessor  {
 		String ruleName = parser.getRuleNames()[rc.getRuleIndex()];
 		if( ruleName.equals("charDataLine") ){
 		    System.out.println( srcString(rc,65) );
+					
 		}
 		else if( ruleName.equals("copyStatement") ){
-		    System.err.println( srcString(rc,65) );
+		    System.err.println( srcString((ParseTree)rc,65) );
 		    String copymem = xpathSubTreeText(parser,
 						      s,
 						      "*/copySource");
@@ -117,17 +119,190 @@ public class CobolPreprocessor  {
 	}
     }
 
-    static class ReplaceSpec {
-	String a;
-	String b;
-	ReplaceSpec(String a, String b){
-	    this.a = a;
-	    this.b = b;
+    public static class SrcText {
+	String text;
+	int    line;
+	int    startPos;
+	int    endPos;
+	public SrcText(String text,
+			 int line,
+			 int startPos){
+	    this.text = text;
+	    this.line = line;
+	    this.startPos = startPos;
+	    this.endPos   = startPos + text.length();
 	}
+	public String getText() { return text; }
+    }
+
+
+    public static ArrayList<SrcText> srcTextsFromTree(ParseTree tree){
+						 
+	ArrayList<TerminalNode> nodes = new ArrayList<TerminalNode>();
+	terminalNodeHelper(nodes,tree);
+	ArrayList<SrcText> texts = new ArrayList<SrcText>();
+
+	for(TerminalNode n : nodes) {
+	    texts.add( new SrcText(n.getText(),
+				   n.getSymbol().getLine(),
+				   n.getSymbol().getCharPositionInLine()));
+	}
+	return texts;
     }
     
-    public InputStream preprocessStream(InputStream is) throws Exception {
 
+    /**
+
+       @param fileWidth fill line with space to fixed length of fillWidth.
+              0 means no filling.
+     */
+
+    public static String srcFromSrcTexts(ArrayList<SrcText> texts, int fillWidth) {
+
+
+	int line0   = 0;
+	int pos0    = 0;
+
+	StringBuffer buff = new StringBuffer();
+
+	for(SrcText n : texts) {
+
+	    // line, pos start from 1,0
+	    int line = n.line;
+	    int pos  = n.startPos;
+
+	    // System.out.printf("line,pos,line0,pos0=%d,%d,%d,%d\n",
+	    // 		          line,pos,line0,pos0);
+
+	    if( line != line0 ){
+
+		if( 1 <= line0 ){
+		    char lastChar = buff.charAt(buff.length()-1);
+		    if( lastChar != '\n' ){
+			if( pos0 < fillWidth ){
+			    buff.append(nchar(' ',fillWidth -pos0));
+			}
+			buff.append('\n');
+		    }
+		}
+		buff.append(nchar(' ',pos));
+		line0 = line;
+	    }
+	    else if( pos0 != pos ){
+		buff.append(nchar(' ',pos - pos0));
+	    }
+
+	    String text = n.getText();
+	    buff.append(text);
+	    pos0 = pos + text.length();
+	}
+	if( pos0 < fillWidth ){
+	    buff.append(nchar(' ',fillWidth - pos0));
+	}
+
+	return buff.toString();
+    }
+
+
+    public static class ReplaceSpec {
+	ArrayList<SrcText> from;
+	ArrayList<SrcText> to;
+	public ReplaceSpec(ArrayList<SrcText> from,
+			   ArrayList<SrcText> to){
+	    this.from = from ;
+	    this.to   = to;
+	}
+    }
+
+    /**
+
+      */
+
+    static class ReplaceState {
+	int pos;
+	ArrayList<SrcText> result;
+	ReplaceState(int pos, ArrayList<SrcText> result){
+	    this.pos = pos;
+	    this.result = result;
+	}
+    }
+
+    static ReplaceState tryReplacements(ArrayList<SrcText> texts,
+					int pos,
+					List<ReplaceSpec> replaces){
+	for(ReplaceSpec r: replaces){
+	    ReplaceState n = tryReplacement(texts,pos,r);
+	    if( n != null ){
+		return n;
+	    }
+	}
+	return null;
+    }
+
+    static ReplaceState tryReplacement(ArrayList<SrcText> texts,
+				       int pos,
+				       ReplaceSpec replace){
+	int i = 0;
+	ArrayList<SrcText> from = replace.from;
+	while( pos + i  < texts.size() ){
+	    SrcText src = texts.get(pos+i);
+	    if( src.getText().equals(from.get(i).getText()) ){
+		i++;
+	    } else {
+		return null;
+	    }
+	}
+	if( i < from.size() ){
+	    return null;
+	}
+	return doReplace(texts,pos,replace);
+    }
+    
+
+    static ReplaceState doReplace(ArrayList<SrcText> texts,
+				  int pos,
+				  ReplaceSpec replaces){
+
+	ArrayList<SrcText> from = replaces.from;
+	ArrayList<SrcText> to   = replaces.to;
+	ArrayList<SrcText> ret  = new ArrayList<SrcText>();
+
+	ret.addAll(texts.subList(0,pos));
+	ret.addAll(pos,to);
+	ret.addAll(texts.subList(pos + from.size(), texts.size()));
+	
+	return new ReplaceState(pos + to.size(),ret);
+    }
+
+    
+    public static ArrayList<SrcText> applyReplacements(ArrayList<SrcText> texts,	
+						       List<ReplaceSpec> replaces){
+	int pos = 0;
+	while( pos < texts.size() ){
+	    ReplaceState state = tryReplacements(texts,pos,replaces);
+	    if( state != null ){
+		pos = state.pos;
+		texts = state.result;
+	    } else {
+		pos++;
+	    }
+	}
+	return texts;
+    }
+
+    public static ReplaceSpec createReplaceSpec(ParseTree from,
+						ParseTree to ){
+	
+	return new ReplaceSpec(srcTextsFromTree(from),srcTextsFromTree(to));
+    }
+
+    public InputStream preprocessStream(InputStream is) throws Exception {
+	return preprocessStream(is,List.of());
+    }
+
+    public InputStream preprocessStream(InputStream is,
+					List<ReplaceSpec> replacement ) throws Exception {
+	
 	Cobol85PreprocessorParser parser = createParser(is);
 	ParseTree tree = parser.startRule();
 
@@ -144,7 +319,11 @@ public class CobolPreprocessor  {
 		String ruleName = parser.getRuleNames()[rc.getRuleIndex()];
 
 		if( ruleName.equals("charDataLine") ){
-		    buff.append(srcString(rc,65));
+
+		    ArrayList<SrcText> texts = srcTextsFromTree((ParseTree)rc);
+		    texts = applyReplacements(texts,replacement);
+
+		    buff.append(srcFromSrcTexts(texts,65));
 		    buff.append('\n');
 		}
 		else if( ruleName.equals("copyStatement") ){
@@ -159,13 +338,13 @@ public class CobolPreprocessor  {
 			replaceClauses.stream()
 			.map( t ->
 			      {
-				  String a = xpathSubTreeText(parser,t,"*/relaceable");
-				  String b = xpathSubTreeText(parser,t,"*/relacement");
-				  return new ReplaceSpec(a,b);
+				  ParseTree a = xpathSubTree(parser,t,"*/relaceable");
+				  ParseTree b = xpathSubTree(parser,t,"*/relacement");
+				  return createReplaceSpec(a,b);
 			      })
 			.collect(Collectors.toList());
 						 
-		    processCopySentence(copymem, buff);
+		    processCopySentence(copymem, buff, replaceSpec);
 		}
 		else if( ruleName.equals("replaceOffStatement") ){
 		    System.err.println( "replaceOffSteatement is not supported");
@@ -217,7 +396,9 @@ public class CobolPreprocessor  {
 	return null;
     }
     
-    void processCopySentence(String copymem, StringBuffer buff) throws Exception {
+    void processCopySentence(String copymem,
+			     StringBuffer buff,
+			     List<ReplaceSpec> replaceSpec) throws Exception {
 
 	File lib = findFile(copymem);
 	if( lib == null) {
@@ -229,7 +410,7 @@ public class CobolPreprocessor  {
 	InputStream is0 = toSrcStream(new FileInputStream(lib));
 	BufferedReader rd =
 	    new BufferedReader
-	    ( new InputStreamReader( preprocessStream(is0) ) );
+	    ( new InputStreamReader( preprocessStream(is0,replaceSpec) ) );
 
 	String line = null;
 	while( (line = rd.readLine()) != null ){

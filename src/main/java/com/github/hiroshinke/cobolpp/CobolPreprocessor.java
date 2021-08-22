@@ -119,11 +119,17 @@ public class CobolPreprocessor  {
 	}
     }
 
-    public static class SrcText {
-	String text;
-	int    line;
-	int    startPos;
-	int    endPos;
+    public static class SrcText implements Cloneable {
+
+	String  text;
+	int     line;
+	int     startPos;
+	int     endPos;
+
+	boolean replaced = false;
+	int     startOrg;
+	int     endOrg;
+	
 	public SrcText(String text,
 			 int line,
 			 int startPos){
@@ -133,6 +139,21 @@ public class CobolPreprocessor  {
 	    this.endPos   = startPos + text.length();
 	}
 	public String getText() { return text; }
+
+	@Override
+	public String toString() {
+	    return String.format("%s,%d,%d",text,line,startPos);
+	}
+
+	@Override
+	public SrcText clone() {
+	    try {
+		return (SrcText)super.clone();
+	    }
+	    catch( CloneNotSupportedException e ){
+		throw new AssertionError();
+	    }
+	}
     }
 
 
@@ -169,7 +190,7 @@ public class CobolPreprocessor  {
 
 	    // line, pos start from 1,0
 	    int line = n.line;
-	    int pos  = n.startPos;
+	    int pos  = n.replaced ? n.startOrg : n.startPos;
 
 	    // System.out.printf("line,pos,line0,pos0=%d,%d,%d,%d\n",
 	    // 		          line,pos,line0,pos0);
@@ -188,7 +209,7 @@ public class CobolPreprocessor  {
 		buff.append(nchar(' ',pos));
 		line0 = line;
 	    }
-	    else if( pos0 != pos ){
+	    else if( pos0 < pos ){
 		buff.append(nchar(' ',pos - pos0));
 	    }
 
@@ -211,6 +232,25 @@ public class CobolPreprocessor  {
 			   ArrayList<SrcText> to){
 	    this.from = from ;
 	    this.to   = to;
+	}
+	
+	public String toString() {
+	    StringBuffer buff = new StringBuffer();
+	    buff.append("ReplaceSpec {");
+	    buff.append("from=");
+	    buff.append(String.join(",",
+				    from.stream()
+				    .map(SrcText::toString)
+				    .collect(Collectors.toList())));
+	    buff.append(";");
+	    buff.append("to=");
+	    buff.append(String.join(",",
+				    to.stream()
+				    .map(SrcText::toString)
+				    .collect(Collectors.toList())));
+	    buff.append(";");
+	    buff.append("}");	    
+	    return buff.toString();
 	}
     }
 
@@ -244,7 +284,7 @@ public class CobolPreprocessor  {
 				       ReplaceSpec replace){
 	int i = 0;
 	ArrayList<SrcText> from = replace.from;
-	while( pos + i  < texts.size() ){
+	while( i < from.size() && pos + i  < texts.size() ){
 	    SrcText src = texts.get(pos+i);
 	    if( src.getText().equals(from.get(i).getText()) ){
 		i++;
@@ -264,9 +304,18 @@ public class CobolPreprocessor  {
 				  ReplaceSpec replaces){
 
 	ArrayList<SrcText> from = replaces.from;
-	ArrayList<SrcText> to   = replaces.to;
+	ArrayList<SrcText> to   = new ArrayList<SrcText>();
 	ArrayList<SrcText> ret  = new ArrayList<SrcText>();
 
+	to.addAll(replaces.to.stream()
+		  .map( t -> t.clone() ).collect(Collectors.toList()));
+	for(SrcText t: to){
+	    t.replaced = true;
+	}
+	if( 0 < to.size() ){
+	    to.get(0).startOrg         = texts.get(pos).startPos;
+	    to.get(to.size()-1).endOrg = texts.get(pos+from.size()-1).endPos;
+	}
 	ret.addAll(texts.subList(0,pos));
 	ret.addAll(pos,to);
 	ret.addAll(texts.subList(pos + from.size(), texts.size()));
@@ -333,17 +382,18 @@ public class CobolPreprocessor  {
 		    String copymem = xpathSubTreeText(parser,s,"*/copySource");
 
 		    Collection<ParseTree> replaceClauses =
-			xpathSubTrees(parser,s,"*/replaceClause");
+			xpathSubTrees(parser,s,"*//replaceClause");
 		    List<ReplaceSpec> replaceSpec =
 			replaceClauses.stream()
 			.map( t ->
 			      {
-				  ParseTree a = xpathSubTree(parser,t,"*/relaceable");
-				  ParseTree b = xpathSubTree(parser,t,"*/relacement");
+				  ParseTree a = xpathSubTree(parser,t,"*/replaceable");
+				  ParseTree b = xpathSubTree(parser,t,"*/replacement");
 				  return createReplaceSpec(a,b);
 			      })
 			.collect(Collectors.toList());
-						 
+		    
+		    System.err.println( "replaceSpec=" + replaceSpec.toString() );
 		    processCopySentence(copymem, buff, replaceSpec);
 		}
 		else if( ruleName.equals("replaceOffStatement") ){

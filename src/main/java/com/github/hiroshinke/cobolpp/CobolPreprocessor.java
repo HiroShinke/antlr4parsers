@@ -124,11 +124,7 @@ public class CobolPreprocessor  {
 	String  text;
 	int     line;
 	int     startPos;
-	int     endPos;
-
 	boolean replaced = false;
-	int     startOrg;
-	int     endOrg;
 	
 	public SrcText(String text,
 			 int line,
@@ -136,7 +132,6 @@ public class CobolPreprocessor  {
 	    this.text = text;
 	    this.line = line;
 	    this.startPos = startPos;
-	    this.endPos   = startPos + text.length();
 	}
 	public String getText() { return text; }
 

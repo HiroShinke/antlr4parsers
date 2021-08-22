@@ -265,7 +265,7 @@ public class AppTest
 	FileUtils.writeStringToFile(file1,
 				    "123456 01 BBBB PIC X(10). \n" + 
 				    "123456 01 BBBB PIC X(10). \n" +
-				    "123456 01 BBBB PIC X(10). \n",
+				    "123456 01 AAAA PIC X(10). \n",
 				    StandardCharsets.UTF_8);
 
 	InputStream is = prep.preprocessStream
@@ -281,7 +281,7 @@ public class AppTest
 	String src4 = rd.readLine();
 	assertThat(src1,is(fillToWidth("01 YYYY PIC X(10).")));	
 	assertThat(src2,is(fillToWidth("01 YYYY PIC X(10).")));
-	assertThat(src3,is(fillToWidth("01 YYYY PIC X(10).")));	
+	assertThat(src3,is(fillToWidth("01 XXXX PIC X(10).")));	
 	assertThat(src4,is(fillToWidth("01 YYYY PIC X(10).")));	
     }
     
@@ -311,6 +311,32 @@ public class AppTest
 	assertThat(src2,is(fillToWidth("01 YYYY PIC X(10).")));	
     }
 
+    @Test
+    public void testReplacing5() throws Exception 
+    {
+	CobolPreprocessor prep
+	    = new CobolPreprocessor(tempFolder.getRoot().getPath());
+
+	File file1 = tempFolder.newFile("YYYY.cbl");
+
+	FileUtils.writeStringToFile(file1,
+				    "123456 01 AAAA PIC X(NN). \n",
+				    StandardCharsets.UTF_8);
+
+	InputStream is = prep.preprocessStream
+	    (toInputStream
+	     (
+	      "COPY YYYY REPLACING NN BY 10.\n" +
+	      "01 YYYY PIC X(10).\n"
+	      )
+	     );
+	BufferedReader rd = bufferedReader(is);
+	String src1 = rd.readLine();
+	String src2 = rd.readLine();
+	assertThat(src1,is(fillToWidth("01 AAAA PIC X(10).")));	
+	assertThat(src2,is(fillToWidth("01 YYYY PIC X(10).")));	
+    }
+    
     
     
     

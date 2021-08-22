@@ -190,7 +190,7 @@ public class CobolPreprocessor  {
 
 	    // line, pos start from 1,0
 	    int line = n.line;
-	    int pos  = n.replaced ? n.startOrg : n.startPos;
+	    int pos  = n.startPos;
 
 	    // System.out.printf("line,pos,line0,pos0=%d,%d,%d,%d\n",
 	    // 		          line,pos,line0,pos0);
@@ -301,25 +301,54 @@ public class CobolPreprocessor  {
 
     static ReplaceState doReplace(ArrayList<SrcText> texts,
 				  int pos,
-				  ReplaceSpec replaces){
+				  ReplaceSpec replace){
 
-	ArrayList<SrcText> from = replaces.from;
-	ArrayList<SrcText> to   = new ArrayList<SrcText>();
 	ArrayList<SrcText> ret  = new ArrayList<SrcText>();
+	ret.addAll(texts.subList(0,pos));
 
-	to.addAll(replaces.to.stream()
-		  .map( t -> t.clone() ).collect(Collectors.toList()));
+	ArrayList<SrcText> from = replace.from;
+	ArrayList<SrcText> to  = new ArrayList<SrcText>
+	    (
+	     replace.to.stream()
+	     .map( t -> t.clone() ).collect(Collectors.toList())
+	     );
+
+	SrcText t1 = to.get(0);
+	SrcText t2 = texts.get(pos);
+	
+	int lineDiff1     = t2.line - t1.line;
+	int startPosDiff1 = t2.startPos - t1.startPos;
+
 	for(SrcText t: to){
 	    t.replaced = true;
+	    t.line = t.line + lineDiff1;
+	    t.startPos  = t.startPos + startPosDiff1;
 	}
-	if( 0 < to.size() ){
-	    to.get(0).startOrg         = texts.get(pos).startPos;
-	    to.get(to.size()-1).endOrg = texts.get(pos+from.size()-1).endPos;
-	}
-	ret.addAll(texts.subList(0,pos));
+	    
 	ret.addAll(pos,to);
-	ret.addAll(texts.subList(pos + from.size(), texts.size()));
-	
+
+	if( pos + from.size() < texts.size() ){
+
+	    ArrayList<SrcText> subAfter  = new ArrayList<SrcText>
+		(
+		 texts.subList(pos + from.size(), texts.size()).stream()
+		 .map( t -> t.clone() ).collect(Collectors.toList())
+		 );
+
+	    SrcText t3 = to.get(to.size()-1);
+	    SrcText t4 = texts.get(pos + from.size() -1);
+
+	    int lineDiff2 = t3.line - t4.line;
+	    int startPosDiff2 = t3.startPos - t4.startPos;
+
+	    for(SrcText t: subAfter){
+		t.replaced = true;
+		t.line = t.line + lineDiff2;
+		t.startPos  = t.startPos + startPosDiff2;
+	    }
+	    ret.addAll(subAfter);
+	}
+
 	return new ReplaceState(pos + to.size(),ret);
     }
 
@@ -371,7 +400,6 @@ public class CobolPreprocessor  {
 
 		    ArrayList<SrcText> texts = srcTextsFromTree((ParseTree)rc);
 		    texts = applyReplacements(texts,replacement);
-
 		    buff.append(srcFromSrcTexts(texts,65));
 		    buff.append('\n');
 		}

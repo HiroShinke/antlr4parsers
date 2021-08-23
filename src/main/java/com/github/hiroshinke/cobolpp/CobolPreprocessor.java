@@ -365,10 +365,30 @@ public class CobolPreprocessor  {
 	return texts;
     }
 
-    public static ReplaceSpec createReplaceSpec(ParseTree from,
+
+    static ParseTree getReplacement(Parser parser,ParseTree t) {
+
+	ParseTree a = xpathSubTree(parser,t,List.of("*/literal",
+						    "*/cobolWord",
+						    "*/charDataLine"));
+	if( a != null ){
+	    return a;
+	}
+	a = xpathSubTree(parser,t,"*/pseudoText/charData");
+
+	if( a != null ){
+	    return a;
+	} else {
+	    return null;
+	}
+    }
+
+    public static ReplaceSpec createReplaceSpec(Parser parser,
+						ParseTree from,
 						ParseTree to ){
 	
-	return new ReplaceSpec(srcTextsFromTree(from),srcTextsFromTree(to));
+	return new ReplaceSpec(srcTextsFromTree(getReplacement(parser,from)),
+			       srcTextsFromTree(getReplacement(parser,to)));
     }
 
     public InputStream preprocessStream(InputStream is) throws Exception {
@@ -414,7 +434,7 @@ public class CobolPreprocessor  {
 			      {
 				  ParseTree a = xpathSubTree(parser,t,"*/replaceable");
 				  ParseTree b = xpathSubTree(parser,t,"*/replacement");
-				  return createReplaceSpec(a,b);
+				  return createReplaceSpec(parser,a,b);
 			      })
 			.collect(Collectors.toList());
 		    

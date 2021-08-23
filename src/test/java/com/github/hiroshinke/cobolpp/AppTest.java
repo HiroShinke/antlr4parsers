@@ -338,6 +338,31 @@ public class AppTest
     }
     
     
-    
+    @Test
+    public void testReplacing6() throws Exception 
+    {
+	CobolPreprocessor prep
+	    = new CobolPreprocessor(tempFolder.getRoot().getPath());
+
+	File file1 = tempFolder.newFile("YYYY.cbl");
+
+	FileUtils.writeStringToFile(file1,
+				    "123456 01 AAAA PIC X(10). \n",
+				    StandardCharsets.UTF_8);
+
+	InputStream is = prep.preprocessStream
+	    (toInputStream
+	     (
+	      "COPY YYYY REPLACING == AAAA == BY == XXXX == .\n" +
+	      "01 YYYY PIC X(10).\n"
+	      )
+	     );
+	BufferedReader rd = bufferedReader(is);
+	String src1 = rd.readLine();
+	String src2 = rd.readLine();
+	assertThat(src1,is(fillToWidth("01 XXXX PIC X(10).")));	
+	assertThat(src2,is(fillToWidth("01 YYYY PIC X(10).")));	
+    }
+
     
 }

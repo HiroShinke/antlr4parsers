@@ -308,20 +308,22 @@ public class CobolPreprocessor  {
 	     .map( t -> t.clone() ).collect(Collectors.toList())
 	     );
 
-	SrcText t1 = to.get(0);
-	SrcText t2 = texts.get(pos);
+	if( 0 < to.size() ){
 	
-	int lineDiff1     = t2.line - t1.line;
-	int startPosDiff1 = t2.startPos - t1.startPos ;
-	
-	for(SrcText t: to){
-	    t.replaced = true;
-	    t.line = t.line + lineDiff1;
-	    t.startPos  = t.startPos + startPosDiff1;
+	    SrcText t1 = to.get(0);
+	    SrcText t2 = texts.get(pos);
+	    
+	    int lineDiff1     = t2.line - t1.line;
+	    int startPosDiff1 = t2.startPos - t1.startPos ;
+	    
+	    for(SrcText t: to){
+		t.replaced = true;
+		t.line = t.line + lineDiff1;
+		t.startPos  = t.startPos + startPosDiff1;
+	    }
+	    ret.addAll(pos,to);
 	}
 	    
-	ret.addAll(pos,to);
-
 	if( pos + from.size() < texts.size() ){
 
 	    ArrayList<SrcText> subAfter  = new ArrayList<SrcText>
@@ -330,18 +332,21 @@ public class CobolPreprocessor  {
 		 .map( t -> t.clone() ).collect(Collectors.toList())
 		 );
 
-	    SrcText t3 = to.get(to.size()-1);
-	    SrcText t4 = texts.get(pos + from.size() -1);
-
-	    int lineDiff2 = t3.line - t4.line;
-	    int startPosDiff2 =
-		t3.startPos + t3.text.length()
-		- t4.startPos - t4.text.length();
-
-	    for(SrcText t: subAfter){
-		t.replaced = true;
-		t.line = t.line + lineDiff2;
-		t.startPos  = t.startPos + startPosDiff2;
+	    if( 0 < to.size() ){
+	    
+		SrcText t3 = to.get(to.size()-1);
+		SrcText t4 = texts.get(pos + from.size() -1);
+		
+		int lineDiff2 = t3.line - t4.line;
+		int startPosDiff2 =
+		    t3.startPos + t3.text.length()
+		    - t4.startPos - t4.text.length();
+		
+		for(SrcText t: subAfter){
+		    t.replaced = true;
+		    t.line = t.line + lineDiff2;
+		    t.startPos  = t.startPos + startPosDiff2;
+		}
 	    }
 	    ret.addAll(subAfter);
 	}
@@ -386,7 +391,9 @@ public class CobolPreprocessor  {
     public static ReplaceSpec createReplaceSpec(ParseTree from,
 						ParseTree to ){
 	
-	return new ReplaceSpec(srcTextsFromTree(from),srcTextsFromTree(to));
+	return new ReplaceSpec(srcTextsFromTree(from),
+			       to != null ?
+			       srcTextsFromTree(to) : new ArrayList<SrcText>() );
     }
 
     public InputStream preprocessStream(InputStream is) throws Exception {

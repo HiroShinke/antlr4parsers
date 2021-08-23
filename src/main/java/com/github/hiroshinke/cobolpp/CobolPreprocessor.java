@@ -383,12 +383,10 @@ public class CobolPreprocessor  {
 	}
     }
 
-    public static ReplaceSpec createReplaceSpec(Parser parser,
-						ParseTree from,
+    public static ReplaceSpec createReplaceSpec(ParseTree from,
 						ParseTree to ){
 	
-	return new ReplaceSpec(srcTextsFromTree(getReplacement(parser,from)),
-			       srcTextsFromTree(getReplacement(parser,to)));
+	return new ReplaceSpec(srcTextsFromTree(from),srcTextsFromTree(to));
     }
 
     public InputStream preprocessStream(InputStream is) throws Exception {
@@ -432,9 +430,11 @@ public class CobolPreprocessor  {
 			replaceClauses.stream()
 			.map( t ->
 			      {
-				  ParseTree a = xpathSubTree(parser,t,"*/replaceable");
-				  ParseTree b = xpathSubTree(parser,t,"*/replacement");
-				  return createReplaceSpec(parser,a,b);
+				  ParseTree a = getReplacement
+				      (parser,xpathSubTree(parser,t,"*/replaceable"));
+				  ParseTree b = getReplacement
+				      (parser,xpathSubTree(parser,t,"*/replacement"));
+				  return createReplaceSpec(a,b);
 			      })
 			.collect(Collectors.toList());
 		    

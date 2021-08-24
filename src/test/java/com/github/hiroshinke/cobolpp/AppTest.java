@@ -415,5 +415,28 @@ public class AppTest
 	assertThat(src1,is(fillToWidth("01     AAAA PIC X(10).")));	
 	assertThat(src2,is(fillToWidth("01 YYYY PIC X(10).")));	
     }
+
+
+    @Test
+    public void testReplaceStat1() throws Exception 
+    {
+
+	CobolPreprocessor prep = new CobolPreprocessor();
+
+	InputStream is = prep.preprocessStream
+	    (toInputStream
+	     (
+	      "REPLACE == XXX == BY == YYY == . \n" +
+	      "01 XXX PIC X(10). \n"
+	      )
+	     );
+	BufferedReader rd = bufferedReader(is);
+	String src1 = rd.readLine();
+	String src2 = rd.readLine();
+	assertThat(src2,is(fillToWidth("01 YYY PIC X(10).")));	
+    }
+
+
+
     
 }

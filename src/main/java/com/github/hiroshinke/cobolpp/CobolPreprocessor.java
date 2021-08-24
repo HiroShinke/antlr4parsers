@@ -400,6 +400,26 @@ public class CobolPreprocessor  {
 	return preprocessStream(is,List.of());
     }
 
+    public List<ReplaceSpec> replaceSpecList(Parser parser, ParseTree s) {
+					 
+	Collection<ParseTree> replaceClauses = xpathSubTrees(parser,s,"*//replaceClause");
+	    
+	List<ReplaceSpec> replaceSpec =
+	    replaceClauses.stream()
+	    .map( t ->
+		  {
+		      ParseTree a = getReplacement
+			  (parser,xpathSubTree(parser,t,"*/replaceable"));
+		      ParseTree b = getReplacement
+			  (parser,xpathSubTree(parser,t,"*/replacement"));
+		      return createReplaceSpec(a,b);
+		  })
+	    .collect(Collectors.toList());
+
+	return replaceSpec;
+    }
+
+
     public InputStream preprocessStream(InputStream is,
 					List<ReplaceSpec> replacement ) throws Exception {
 	
@@ -430,20 +450,7 @@ public class CobolPreprocessor  {
 		    System.err.println( "copyStatement expanded");
 		    System.err.println( srcString(rc,65) );
 		    String copymem = xpathSubTreeText(parser,s,"*/copySource");
-
-		    Collection<ParseTree> replaceClauses =
-			xpathSubTrees(parser,s,"*//replaceClause");
-		    List<ReplaceSpec> replaceSpec =
-			replaceClauses.stream()
-			.map( t ->
-			      {
-				  ParseTree a = getReplacement
-				      (parser,xpathSubTree(parser,t,"*/replaceable"));
-				  ParseTree b = getReplacement
-				      (parser,xpathSubTree(parser,t,"*/replacement"));
-				  return createReplaceSpec(a,b);
-			      })
-			.collect(Collectors.toList());
+		    List<ReplaceSpec> replaceSpec = replaceSpecList(parser,s);
 		    
 		    System.err.println( "replaceSpec=" + replaceSpec.toString() );
 		    processCopySentence(copymem, buff, replaceSpec);
@@ -453,8 +460,32 @@ public class CobolPreprocessor  {
 		    System.err.println( srcString(rc,65) );
 		}
 		else if( ruleName.equals("replaceArea") ){
+
 		    System.err.println( "replaceArea is not supported");
 		    System.err.println( srcString(rc,65) );
+
+		    Collection<ParseTree> area  = xpathSubTrees(parser,s,"*/*");
+		    List<ReplaceSpec> replaceSpec = null;
+		    
+		    for(ParseTree e: area){
+
+			if( e instanceof RuleContext ){
+			
+			    ParseTree rbs  = xpathSubTree
+				(parser,e,"replaceByStatement");
+			    if( rbs != null ){
+				replaceSpec = replaceSpecList(parser,rbs);
+			    }
+			    else {
+				ArrayList<SrcText> texts = srcTextsFromTree(e);
+				texts = applyReplacements(texts,replaceSpec);
+				buff.append(srcFromSrcTexts(texts,65));
+				buff.append('\n');
+			    }
+			    System.err.println( "replaceSpec=" +
+						replaceSpec.toString() );
+			}
+		    }			
 		}
 		else {
 		    throw new RuntimeException("unsupportedRule: " + ruleName);

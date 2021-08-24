@@ -121,6 +121,9 @@ public abstract class DataItem {
 		for(DataItem i: children){
 		    size += i.getSize();
 		}
+		if( ! occurs.isEmpty() ){
+		    size = size * Integer.valueOf(occurs);
+		}
 		requireSizeUpdate = false;
 	    }
 	    return size;
@@ -173,7 +176,8 @@ public abstract class DataItem {
 	    this.pict = pict;
 	    this.value = value;
 	    this.size   = calculateSize(usage,pict);
-	    this.numOfChar   = pictureCountChar(pict);	
+	    int occursNum = occurs.isEmpty() ? 1 : Integer.valueOf(occurs);
+	    this.numOfChar   = pictureCountChar(pict);
 	}
 
 	@Override

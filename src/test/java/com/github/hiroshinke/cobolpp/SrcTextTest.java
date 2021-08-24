@@ -85,6 +85,25 @@ public class SrcTextTest
 				      65)));
     }
 
+    @Test
+    public void testApp2_1() throws Exception 
+    {
+	assertThat(fillToWidth("AAB"),
+		   is(srcFromSrcTexts(l(
+					st("AA",1,0), st("B",1,2)
+					),
+				      65)));
+    }
+
+    @Test
+    public void testApp2_2() throws Exception 
+    {
+	assertThat(fillToWidth("AAAB"),
+		   is(srcFromSrcTexts(l(
+					st("AAA",1,0), st("B",1,2)
+					),
+				      65)));
+    }
 
     @Test
     public void testApp3() throws Exception 
@@ -97,6 +116,18 @@ public class SrcTextTest
 				      65)));
     }
 
+    @Test
+    public void testApp3_1() throws Exception 
+    {
+	assertThat("A\n" + 
+		   fillToWidth("B"),
+		   is(srcFromSrcTexts(l(
+					st("A\n",1,0), st("B",2,0)
+					),
+				      65)));
+    }
+
+    
 
     @Test
     public void testApp3_2() throws Exception 

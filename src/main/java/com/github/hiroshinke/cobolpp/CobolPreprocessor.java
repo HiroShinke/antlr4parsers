@@ -187,6 +187,7 @@ public class CobolPreprocessor  {
 	    int line = n.line;
 	    int pos  = n.startPos;
 
+	    // TODO: check is this good ?
 	    if( n.getText().equals("\n") ){
 		continue;
 	    }
@@ -210,6 +211,9 @@ public class CobolPreprocessor  {
 	    }
 	    else if( pos0 < pos ){
 		buff.append(nchar(' ',pos - pos0));
+	    }
+	    else {
+		pos = pos0;
 	    }
 	    
 	    String text = n.getText();

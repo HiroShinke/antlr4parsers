@@ -127,8 +127,8 @@ public class CobolPreprocessor  {
 	boolean replaced = false;
 	
 	public SrcText(String text,
-			 int line,
-			 int startPos){
+		       int line,
+		       int startPos){
 	    this.text = text;
 	    this.line = line;
 	    this.startPos = startPos;
@@ -187,11 +187,15 @@ public class CobolPreprocessor  {
 	    int line = n.line;
 	    int pos  = n.startPos;
 
+	    if( n.getText().equals("\n") ){
+		continue;
+	    }
+	    
 	    // System.out.printf("line,pos,line0,pos0=%d,%d,%d,%d\n",
 	    // 		          line,pos,line0,pos0);
 
 	    if( line != line0 ){
-
+		
 		if( 1 <= line0 ){
 		    char lastChar = buff.charAt(buff.length()-1);
 		    if( lastChar != '\n' ){
@@ -207,7 +211,7 @@ public class CobolPreprocessor  {
 	    else if( pos0 < pos ){
 		buff.append(nchar(' ',pos - pos0));
 	    }
-
+	    
 	    String text = n.getText();
 	    buff.append(text);
 	    pos0 = pos + text.length();

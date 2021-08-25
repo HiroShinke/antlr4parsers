@@ -432,8 +432,7 @@ public class AppTest
 	     );
 	BufferedReader rd = bufferedReader(is);
 	String src1 = rd.readLine();
-	String src2 = rd.readLine();
-	assertThat(src2,is(fillToWidth("01 YYY PIC X(10).")));	
+	assertThat(src1,is(fillToWidth("01 YYY PIC X(10).")));	
     }
 
 

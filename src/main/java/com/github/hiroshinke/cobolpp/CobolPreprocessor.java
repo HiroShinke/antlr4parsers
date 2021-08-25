@@ -486,6 +486,7 @@ public class CobolPreprocessor  {
 			    }
 			    else {
 				ArrayList<SrcText> texts = srcTextsFromTree(e);
+				// System.err.println("texts=" + texts.toString());
 				texts = applyReplacements(texts,replaceSpec);
 				buff.append(srcFromSrcTexts(texts,65));
 				buff.append('\n');
@@ -493,7 +494,7 @@ public class CobolPreprocessor  {
 			    System.err.println( "replaceSpec=" +
 						replaceSpec.toString() );
 			}
-		    }			
+		    }
 		}
 		else {
 		    throw new RuntimeException("unsupportedRule: " + ruleName);

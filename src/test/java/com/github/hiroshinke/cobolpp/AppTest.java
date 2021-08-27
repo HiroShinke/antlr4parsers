@@ -435,7 +435,80 @@ public class AppTest
 	assertThat(src1,is(fillToWidth("01 YYY PIC X(10).")));	
     }
 
+    @Test
+    public void testReplaceStat2() throws Exception 
+    {
 
+	CobolPreprocessor prep = new CobolPreprocessor();
+
+	InputStream is = prep.preprocessStream
+	    (toInputStream
+	     (
+	      "REPLACE == XXX == BY == YYY == . \n" +
+	      "01 XXX PIC X(10). \n" +
+	      "01 XXX PIC X(10). \n"
+	      )
+	     );
+	BufferedReader rd = bufferedReader(is);
+	String src1 = rd.readLine();
+	String src2 = rd.readLine();
+	assertThat(src1,is(fillToWidth("01 YYY PIC X(10).")));
+	assertThat(src2,is(fillToWidth("01 YYY PIC X(10).")));		
+    }
+
+
+    @Test
+    public void testReplaceStat3() throws Exception 
+    {
+
+	CobolPreprocessor prep = new CobolPreprocessor();
+
+	InputStream is = prep.preprocessStream
+	    (toInputStream
+	     (
+	      "REPLACE == XXX == BY == YYY == . \n" +
+	      "01 XXX PIC X(10). \n" +
+	      "01 XXX PIC X(10). \n" +
+	      "REPLACE OFF.\n" +
+	      "01 XXX PIC X(10). \n"
+	      )
+	     );
+	BufferedReader rd = bufferedReader(is);
+	String src1 = rd.readLine();
+	String src2 = rd.readLine();
+	String src3 = rd.readLine();
+	assertThat(src1,is(fillToWidth("01 YYY PIC X(10).")));
+	assertThat(src2,is(fillToWidth("01 YYY PIC X(10).")));
+	assertThat(src3,is(fillToWidth("01 XXX PIC X(10).")));	
+    }
 
     
+    @Test
+    public void testReplaceCopy1() throws Exception 
+    {
+	CobolPreprocessor prep
+	    = new CobolPreprocessor(tempFolder.getRoot().getPath());
+
+	File file1 = tempFolder.newFile("YYYY.cbl");
+
+	FileUtils.writeStringToFile(file1,
+				    "123456 01 XXX PIC X(10). \n" +
+				    "123456 01 XXX PIC X(10). \n",
+				    StandardCharsets.UTF_8);
+
+	InputStream is = prep.preprocessStream
+	    (toInputStream
+	     (
+	      "REPLACE XXX BY YYY. \n" +
+	      "COPY YYYY. \n"
+	      )
+	     );
+	BufferedReader rd = bufferedReader(is);
+	String src1 = rd.readLine();
+	String src2 = rd.readLine();
+	assertThat(src1,is(fillToWidth("01 YYY PIC X(10).")));	
+	assertThat(src2,is(fillToWidth("01 YYY PIC X(10).")));	
+    }
+    
+
 }

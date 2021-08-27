@@ -135,9 +135,20 @@ public class CobolPreprocessor  {
 	}
 	public String getText() { return text; }
 
+	String hexs(String text){
+	    byte[] bytes = text.getBytes();
+	    ArrayList<String> buff = new ArrayList<String>();
+	    for( byte b : bytes ){
+		buff.add( String.format("%02x",b) );
+
+	    }
+	    return String.join(":",buff);
+	}
+
 	@Override
 	public String toString() {
-	    return String.format("%s,%d,%d",text,line,startPos);
+	    return String.format("%s,%s,%d,%d",
+				 text,hexs(text),line,startPos);
 	}
 
 	@Override
@@ -159,7 +170,12 @@ public class CobolPreprocessor  {
 	ArrayList<SrcText> texts = new ArrayList<SrcText>();
 
 	for(TerminalNode n : nodes) {
-	    texts.add( new SrcText(n.getText(),
+
+	    String text = n.getText();
+	    if( text.equals("\n") ){
+		continue;
+	    }
+	    texts.add( new SrcText(text,
 				   n.getSymbol().getLine(),
 				   n.getSymbol().getCharPositionInLine()));
 	}
@@ -183,15 +199,15 @@ public class CobolPreprocessor  {
 
 	for(SrcText n : texts) {
 
-	    // line, pos start from 1,0
-	    int line = n.line;
-	    int pos  = n.startPos;
-
 	    // TODO: check is this good ?
 	    if( n.getText().equals("\n") ){
 		continue;
 	    }
-	    
+
+	    // line, pos start from 1,0
+	    int line = n.line;
+	    int pos  = n.startPos;
+
 	    // System.out.printf("line,pos,line0,pos0=%d,%d,%d,%d\n",
 	    // 		          line,pos,line0,pos0);
 
@@ -464,8 +480,7 @@ public class CobolPreprocessor  {
 		    processCopySentence(copymem, buff, replaceSpec);
 		}
 		else if( ruleName.equals("replaceOffStatement") ){
-		    System.err.println( "replaceOffSteatement is not supported");
-		    System.err.println( srcString(rc,65) );
+
 		}
 		else if( ruleName.equals("replaceArea") ){
 
@@ -478,21 +493,42 @@ public class CobolPreprocessor  {
 		    for(ParseTree e: area){
 
 			if( e instanceof RuleContext ){
-			
-			    ParseTree rbs  = xpathSubTree
-				(parser,e,"replaceByStatement");
-			    if( rbs != null ){
-				replaceSpec = replaceSpecList(parser,rbs);
+
+			    RuleContext rc2 = (RuleContext)e;
+			    String ruleName2 = parser
+				.getRuleNames()[rc2.getRuleIndex()];
+
+			    if( ruleName2.equals("replaceByStatement")){
+				replaceSpec = replaceSpecList(parser,e);
 			    }
-			    else {
+			    else if( ruleName2.equals("copyStatement") ){
+				System.err.println( "copyStatement expanded");
+				System.err.println( srcString(rc,65) );
+				String copymem = xpathSubTreeText(parser,e,"*/copySource");
+				List<ReplaceSpec> replaceSpec2 = replaceSpecList(parser,e);
+
+				System.err.println( "replaceSpec2=" + replaceSpec2.toString() );
+				buff.append( streamToString
+					     ( preprocessStream
+					       (streamFromCopymem(copymem,replaceSpec2),
+						replaceSpec)
+					       )
+					     );
+			    }
+			    else if( ruleName2.equals("replaceOffStatement") ){
+				
+
+			    } else {
 				ArrayList<SrcText> texts = srcTextsFromTree(e);
-				// System.err.println("texts=" + texts.toString());
+				System.err.println("texts=" + texts.toString());
 				texts = applyReplacements(texts,replaceSpec);
-				buff.append(srcFromSrcTexts(texts,65));
-				buff.append('\n');
+				if( 0 < texts.size() ){
+				    buff.append(srcFromSrcTexts(texts,65));
+				    buff.append('\n');
+				}
 			    }
-			    System.err.println( "replaceSpec=" +
-						replaceSpec.toString() );
+			    System.err.println
+				( "replaceSpec=" + replaceSpec.toString() );
 			}
 		    }
 		}
@@ -537,22 +573,47 @@ public class CobolPreprocessor  {
 	}
 	return null;
     }
+
+
+    InputStream streamFromCopymem(String copymem,
+				  List<ReplaceSpec> replaceSpec)
+	throws Exception {
+
+	File lib = findFile(copymem);
+	if( lib == null) {
+	    throw new AssertionError("copymem not found: " + copymem);
+	}
+	System.err.println("lib=" + lib.getPath());
+	
+	InputStream is0 = toSrcStream(new FileInputStream(lib));
+	return preprocessStream(is0,replaceSpec);
+    }
+
+    String streamToString(InputStream is) throws Exception {
+
+	StringBuffer buff = new StringBuffer();
+
+	BufferedReader rd =
+	    new BufferedReader
+	    ( new InputStreamReader(is) );
+
+	String line = null;
+	while( (line = rd.readLine()) != null ){
+	    buff.append(line);
+	    buff.append('\n');
+	}
+
+	return buff.toString();
+    }
+
     
     void processCopySentence(String copymem,
 			     StringBuffer buff,
 			     List<ReplaceSpec> replaceSpec) throws Exception {
 
-	File lib = findFile(copymem);
-	if( lib == null) {
-	    System.err.println("copymem not found: " + copymem);
-	    return;
-	}
-	System.err.println("lib=" + lib.getPath());
-	
-	InputStream is0 = toSrcStream(new FileInputStream(lib));
 	BufferedReader rd =
 	    new BufferedReader
-	    ( new InputStreamReader( preprocessStream(is0,replaceSpec) ) );
+	    ( new InputStreamReader( streamFromCopymem(copymem,replaceSpec) ) );
 
 	String line = null;
 	while( (line = rd.readLine()) != null ){

@@ -142,5 +142,16 @@ public class SrcTextTest
 				      65)));
     }
 
+
+    @Test
+    public void testApp4() throws Exception 
+    {
+	assertThat(srcFromSrcTexts(l(
+				     ),
+				   65),
+		   is(fillToWidth("")));
+		   
+    }
+    
     
 }

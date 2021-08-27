@@ -463,11 +463,8 @@ public class CobolPreprocessor  {
 		String ruleName = parser.getRuleNames()[rc.getRuleIndex()];
 
 		if( ruleName.equals("charDataLine") ){
+		    appendAllTexts(buff,s,replacement);
 
-		    ArrayList<SrcText> texts = srcTextsFromTree((ParseTree)rc);
-		    texts = applyReplacements(texts,replacement);
-		    buff.append(srcFromSrcTexts(texts,65));
-		    buff.append('\n');
 		}
 		else if( ruleName.equals("copyStatement") ){
 
@@ -517,15 +514,8 @@ public class CobolPreprocessor  {
 			    }
 			    else if( ruleName2.equals("replaceOffStatement") ){
 				
-
 			    } else {
-				ArrayList<SrcText> texts = srcTextsFromTree(e);
-				System.err.println("texts=" + texts.toString());
-				texts = applyReplacements(texts,replaceSpec);
-				if( 0 < texts.size() ){
-				    buff.append(srcFromSrcTexts(texts,65));
-				    buff.append('\n');
-				}
+				appendAllTexts(buff,e,replaceSpec);
 			    }
 			    System.err.println
 				( "replaceSpec=" + replaceSpec.toString() );
@@ -544,6 +534,19 @@ public class CobolPreprocessor  {
 					getBytes(StandardCharsets.UTF_8));
     }
 
+
+    void appendAllTexts(StringBuffer buff,
+			ParseTree tree,
+			List<ReplaceSpec> replacement) {
+	ArrayList<SrcText> texts = srcTextsFromTree(tree);
+	texts = applyReplacements(texts,replacement);
+	if( 0 < texts.size() ){
+	    buff.append(srcFromSrcTexts(texts,65));
+	    buff.append('\n');
+	}
+    }
+    
+    
     static String stripQuote(String literal){
 	return literal.substring(1,literal.length()-1);
     }

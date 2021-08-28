@@ -30,7 +30,7 @@ import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 
 import com.github.hiroshinke.cobolpp.CobolPreprocessor;
-import static com.github.hiroshinke.cobolsample.AntlrUtil.*;
+import static com.github.hiroshinke.antlr4.AntlrUtil.*;
 import static com.github.hiroshinke.cobolsample.ParserCommon.*;
 
 import org.apache.commons.cli.*;

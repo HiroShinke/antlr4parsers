@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
 import static com.github.hiroshinke.cobolsample.ParserCommon.*;
-import static com.github.hiroshinke.cobolsample.AntlrUtil.*;
+import static com.github.hiroshinke.antlr4.AntlrUtil.*;
 
 
 public class CobolPreprocessor  {

@@ -24,7 +24,7 @@ import org.antlr.v4.runtime.tree.xpath.XPath;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import org.apache.commons.io.FileUtils;
-import static com.github.hiroshinke.cobolsample.AntlrUtil.nchar;
+import static com.github.hiroshinke.antlr4.AntlrUtil.nchar;
 
 import com.github.hiroshinke.cobolpp.CobolPreprocessor.SrcText;
 import static com.github.hiroshinke.cobolpp.CobolPreprocessor.srcFromSrcTexts;

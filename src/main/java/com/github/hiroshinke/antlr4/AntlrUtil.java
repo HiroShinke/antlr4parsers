@@ -1,6 +1,6 @@
 
 
-package com.github.hiroshinke.cobolsample;;
+package com.github.hiroshinke.antlr4;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;

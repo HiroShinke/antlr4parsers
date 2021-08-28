@@ -538,7 +538,8 @@ public class CobolPreprocessor  {
 		    }
 		}
 		else {
-		    throw new RuntimeException("unsupportedRule: " + ruleName);
+		    appendAllTexts(buff,s,replacement);
+		    // throw new RuntimeException("unsupportedRule: " + ruleName);
 		}
 	    }
 	    else {
@@ -619,7 +620,8 @@ public class CobolPreprocessor  {
 		    }
 		}
 		else {
-		    throw new RuntimeException("unsupportedRule: " + ruleName);
+		    appendAllTexts(buff,s,replaceSpec);		    
+		    //throw new RuntimeException("unsupportedRule: " + ruleName);
 		}
 	    }
 	    else {

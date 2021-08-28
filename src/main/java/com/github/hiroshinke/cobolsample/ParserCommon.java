@@ -46,8 +46,9 @@ public class ParserCommon {
     }
 
 
-    static Pattern pattern = Pattern.compile("^.{6}-\\s+(\"|\')");
-
+    static Pattern pattern =  Pattern.compile("^.{6}-\\s+(\"|\')");
+    static Pattern pattern2 = Pattern.compile("^.{6}-(\\s*)");
+    
     public static InputStream toSrcStream(InputStream is) throws Exception {
 
 	BufferedReader rd = new BufferedReader(new InputStreamReader(is));
@@ -67,10 +68,24 @@ public class ParserCommon {
 	    }
 	    else if( line.charAt(6) == '-' ){
 		int last = buff.length();
-		buff.delete(last-1,last);
+		buff.delete(last-1,last);		    		
 		Matcher m = pattern.matcher(line);
+		Matcher m2 = pattern2.matcher(line);
 		if( m.find() ){
 		    int e = m.end();
+		    buff.append(line.substring(e,cutoff));
+		} else if( m2.find() ){
+		    int e = m2.end();
+		    int i = buff.length() - 1;
+		    while( 0 <= i ){
+			char c = buff.charAt(i);
+			if( c == ' ' ){
+			    buff.delete(i,i+1);
+			} else {
+			    break;
+			}
+			i--;
+		    }
 		    buff.append(line.substring(e,cutoff));
 		} else {
 		    buff.append(line.substring(7,cutoff));

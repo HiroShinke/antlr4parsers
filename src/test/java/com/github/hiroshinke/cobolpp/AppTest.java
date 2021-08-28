@@ -25,6 +25,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import org.apache.commons.io.FileUtils;
 import static com.github.hiroshinke.antlr4.AntlrUtil.nchar;
+import static com.github.hiroshinke.cobolsample.ParserCommon.toSrcStream;
 
 /**
  * Unit test for simple App.
@@ -486,6 +487,62 @@ public class AppTest
 	assertThat(src3,is(fillToWidth("01 XXX PIC X(10).")));	
     }
 
+
+    @Test
+    public void testReplaceStat4() throws Exception 
+    {
+
+	CobolPreprocessor prep = new CobolPreprocessor();
+
+	InputStream is = prep.preprocessStream
+	    (toSrcStream (toInputStream
+			(
+			 "123456 REPLACE == XXX == BY == Y \n" +
+			 "123456-YY ==. \n" + 
+			 "123456 01 XXX PIC X(10). \n" +
+			 "123456 01 XXX PIC X(10). \n" +
+			 "123456 REPLACE OFF.\n" +
+			 "123456 01 XXX PIC X(10). \n"
+			 )
+			)
+	     );
+	BufferedReader rd = bufferedReader(is);
+	String src1 = rd.readLine();
+	String src2 = rd.readLine();
+	String src3 = rd.readLine();
+	assertThat(src1,is(fillToWidth("01 YYY PIC X(10).")));
+	assertThat(src2,is(fillToWidth("01 YYY PIC X(10).")));
+	assertThat(src3,is(fillToWidth("01 XXX PIC X(10).")));	
+    }
+
+
+    @Test
+    public void testReplaceStat5() throws Exception 
+    {
+
+	CobolPreprocessor prep = new CobolPreprocessor();
+
+	InputStream is = prep.preprocessStream
+	    (toSrcStream (toInputStream
+			(
+			 "123456 REPLACE == XXX == BY == Y \n" +
+			 "123456-   YY ==. \n" + 
+			 "123456 01 XXX PIC X(10). \n" +
+			 "123456 01 XXX PIC X(10). \n" +
+			 "123456 REPLACE OFF.\n" +
+			 "123456 01 XXX PIC X(10). \n"
+			 )
+			)
+	     );
+	BufferedReader rd = bufferedReader(is);
+	String src1 = rd.readLine();
+	String src2 = rd.readLine();
+	String src3 = rd.readLine();
+	assertThat(src1,is(fillToWidth("01 YYY PIC X(10).")));
+	assertThat(src2,is(fillToWidth("01 YYY PIC X(10).")));
+	assertThat(src3,is(fillToWidth("01 XXX PIC X(10).")));	
+    }
+    
     
     @Test
     public void testReplaceCopy1() throws Exception 

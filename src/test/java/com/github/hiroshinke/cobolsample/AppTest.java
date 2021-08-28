@@ -19,6 +19,7 @@ import org.antlr.v4.runtime.tree.xpath.XPath;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import static com.github.hiroshinke.cobolsample.ParserCommon.pattern;
+import static com.github.hiroshinke.antlr4.AntlrUtil.*;
 
 /**
  * Unit test for simple App.
@@ -36,12 +37,12 @@ public class AppTest
 	InputStream is = toInputStream("01 XXXX PIC 9(10). ");
 	Cobol85Parser parser = App.createParser(is);
 	ParseTree tree = parser.dataDescriptionEntry();
-	String value = AntlrUtil.xpathSubTreesCont
+	String value = xpathSubTreesCont
 	    (parser,tree,"//dataDescriptionEntry/*",
 	     (entries) -> {
 		 for(ParseTree e: entries){
-		     return AntlrUtil.xpathSubTreeText(parser,e,
-						       "*/INTEGERLITERAL");
+		     return xpathSubTreeText(parser,e,
+					     "*/INTEGERLITERAL");
 		 }
 		 return null;
 	     });
@@ -55,10 +56,10 @@ public class AppTest
 	Cobol85Parser parser = App.createParser(is);
 	ParseTree tree = parser.dataDescriptionEntry();
 	String xpath = "//dataDescriptionEntry/*";
-	Collection<ParseTree> es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
+	Collection<ParseTree> es = xpathSubTrees(parser,tree,xpath);
 	String value = "";
 	for(ParseTree e: es) {
-	    value = AntlrUtil.xpathSubTreeText(parser,e,"*/dataName");
+	    value = xpathSubTreeText(parser,e,"*/dataName");
 	}
 	assertThat(value,is("XXXX"));		
     }
@@ -70,10 +71,10 @@ public class AppTest
 	Cobol85Parser parser = App.createParser(is);
 	ParseTree tree = parser.dataDescriptionEntry();
 	String xpath = "//dataDescriptionEntry/*";
-	Collection<ParseTree> es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
+	Collection<ParseTree> es = xpathSubTrees(parser,tree,xpath);
 	String value = "";
 	for(ParseTree e: es) {
-	    value = AntlrUtil.xpathSubTreeText(parser,e,"*//pictureString");
+	    value = xpathSubTreeText(parser,e,"*//pictureString");
 	}
 	assertThat(value,is("9(10)"));	
     }
@@ -86,14 +87,14 @@ public class AppTest
 	Cobol85Parser parser = App.createParser(is);
 	ParseTree tree = parser.dataDescriptionEntry();
 	String xpath = "//dataDescriptionEntry/*";
-	Collection<ParseTree> es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
+	Collection<ParseTree> es = xpathSubTrees(parser,tree,xpath);
 	String value = "";
 	for(ParseTree e: es) {
-	    value = AntlrUtil.xpathSubTreePatternText(parser,
-						      e,
-						      "*//dataPictureClause",
-						      "<PIC> <foo:pictureString>",
-						      "foo");
+	    value = xpathSubTreePatternText(parser,
+					    e,
+					    "*//dataPictureClause",
+					    "<PIC> <foo:pictureString>",
+					    "foo");
 	}
 	assertThat(value,is("9(10)"));
     }
@@ -106,10 +107,10 @@ public class AppTest
 	Cobol85Parser parser = App.createParser(is);
 	ParseTree tree = parser.dataDescriptionEntry();
 	String xpath = "//dataDescriptionEntry/*";
-	Collection<ParseTree> es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
+	Collection<ParseTree> es = xpathSubTrees(parser,tree,xpath);
 	String value = "";
 	for(ParseTree e: es) {
-	    value = AntlrUtil.xpathSubTreeText(parser,e,"*/LEVEL_NUMBER_88");
+	    value = xpathSubTreeText(parser,e,"*/LEVEL_NUMBER_88");
 	}
 	assertThat(value,is("88"));	
     }
@@ -121,10 +122,10 @@ public class AppTest
 	Cobol85Parser parser = App.createParser(is);
 	ParseTree tree = parser.dataDescriptionEntry();
 	String xpath = "//dataDescriptionEntry/*";
-	Collection<ParseTree> es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
+	Collection<ParseTree> es = xpathSubTrees(parser,tree,xpath);
 	String value = "";
 	for(ParseTree e: es) {
-	    value = AntlrUtil.xpathSubTreeText
+	    value = xpathSubTreeText
 		(parser,
 		 e,
 		 List.of("*/INTEGERLITERAL","*/LEVEL_NUMBER_88")
@@ -153,7 +154,7 @@ public class AppTest
 	Cobol85Parser parser = App.createParser(is);
 	ParseTree tree = parser.fileControlEntry();
 	String xpath = "//fileName";
-	Collection<ParseTree> es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
+	Collection<ParseTree> es = xpathSubTrees(parser,tree,xpath);
 	String value = "";
 	for(ParseTree e: es) {
 	    value = e.getText();
@@ -161,7 +162,7 @@ public class AppTest
 	assertThat(value,is("FILE01"));	
 
 	xpath = "//assignmentName";
-	es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
+	es = xpathSubTrees(parser,tree,xpath);
 	for(ParseTree e: es) {
 	    value = e.getText();
 	}
@@ -178,7 +179,7 @@ public class AppTest
 	Cobol85Parser parser = App.createParser(is);
 	ParseTree tree = parser.fileDescriptionEntry();
 	String xpath = "*/fileName";
-	Collection<ParseTree> es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
+	Collection<ParseTree> es = xpathSubTrees(parser,tree,xpath);
 	String value = "";
 	for(ParseTree e: es) {
 	    value = e.getText();
@@ -186,7 +187,7 @@ public class AppTest
 	assertThat(value,is("FILE01"));	
 
 	xpath = "//dataDescriptionEntry/*/dataName";
-	es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
+	es = xpathSubTrees(parser,tree,xpath);
 	List<String> ret = es.stream()
 	    .map(ParseTree::getText)
 	    .collect(Collectors.toList());
@@ -200,7 +201,7 @@ public class AppTest
 	Cobol85Parser parser = App.createParser(is);
 	ParseTree tree = parser.readStatement();
 	String xpath = "*/fileName";
-	Collection<ParseTree> es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
+	Collection<ParseTree> es = xpathSubTrees(parser,tree,xpath);
 	String value = "";
 	for(ParseTree e: es) {
 	    value = e.getText();
@@ -208,7 +209,7 @@ public class AppTest
 	assertThat(value,is("F01"));	
 
 	xpath = "*/readInto/identifier";
-	es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
+	es = xpathSubTrees(parser,tree,xpath);
 	for(ParseTree e: es) {
 	    value = e.getText();
 	}
@@ -224,7 +225,7 @@ public class AppTest
 	Cobol85Parser parser = App.createParser(is);
 	ParseTree tree = parser.writeStatement();
 	String xpath = "*/recordName";
-	Collection<ParseTree> es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
+	Collection<ParseTree> es = xpathSubTrees(parser,tree,xpath);
 	String value = "";
 	for(ParseTree e: es) {
 	    value = e.getText();
@@ -232,7 +233,7 @@ public class AppTest
 	assertThat(value,is("OUT-REC"));	
 
 	xpath = "//writeFromPhrase/identifier";
-	es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
+	es = xpathSubTrees(parser,tree,xpath);
 	for(ParseTree e: es) {
 	    value = e.getText();
 	}
@@ -247,14 +248,14 @@ public class AppTest
 	Cobol85Parser parser = App.createParser(is);
 	ParseTree tree = parser.openStatement();
 	String xpath = "//openInputStatement//fileName";
-	Collection<ParseTree> es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
+	Collection<ParseTree> es = xpathSubTrees(parser,tree,xpath);
 	List<String> ret = es.stream()
 	    .map( ParseTree::getText )
 	    .collect(Collectors.toList());
 	assertThat(ret,is(List.of("X","Y")));
 
 	xpath = "//openOutputStatement//fileName";
-	es = AntlrUtil.xpathSubTrees(parser,tree,xpath);
+	es = xpathSubTrees(parser,tree,xpath);
 	ret = es.stream()
 	    .map( ParseTree::getText )
 	    .collect(Collectors.toList());

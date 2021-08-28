@@ -245,8 +245,10 @@ public class CobolPreprocessor  {
 
 
     public static class ReplaceSpec {
+
 	ArrayList<SrcText> from;
 	ArrayList<SrcText> to;
+
 	public ReplaceSpec(ArrayList<SrcText> from,
 			   ArrayList<SrcText> to){
 	    this.from = from ;
@@ -420,6 +422,11 @@ public class CobolPreprocessor  {
 			       srcTextsFromTree(to) : new ArrayList<SrcText>() );
     }
 
+    public static ReplaceSpec nullReplaceSpec(){
+	return new ReplaceSpec(new ArrayList<SrcText>(),
+			       new ArrayList<SrcText>() );
+    }
+    
     public InputStream preprocessStream(InputStream is) throws Exception {
 	return preprocessStream(is,List.of());
     }
@@ -446,6 +453,17 @@ public class CobolPreprocessor  {
 
     public InputStream preprocessStream(InputStream is,
 					List<ReplaceSpec> replacement ) throws Exception {
+
+	return preprocessStream2(preprocessStream1(is,replacement));
+    }
+
+    /**
+       process copyStatements to expand.
+
+     */
+    InputStream preprocessStream1(InputStream is,
+				  List<ReplaceSpec> replacement )
+	throws Exception {
 	
 	Cobol85PreprocessorParser parser = createParser(is);
 	ParseTree tree = parser.startRule();
@@ -462,7 +480,9 @@ public class CobolPreprocessor  {
 		RuleContext rc = (RuleContext)s;
 		String ruleName = parser.getRuleNames()[rc.getRuleIndex()];
 
-		if( ruleName.equals("charDataLine") ){
+		if( ruleName.equals("charDataLine") ||
+		    ruleName.equals("replaceOffStatement") ){
+		    
 		    appendAllTexts(buff,s,replacement);
 
 		}
@@ -472,20 +492,21 @@ public class CobolPreprocessor  {
 		    System.err.println( srcString(rc,65) );
 		    String copymem = xpathSubTreeText(parser,s,"*/copySource");
 		    List<ReplaceSpec> replaceSpec = replaceSpecList(parser,s);
-		    
 		    System.err.println( "replaceSpec=" + replaceSpec.toString() );
-		    processCopySentence(copymem, buff, replaceSpec);
-		}
-		else if( ruleName.equals("replaceOffStatement") ){
-
+		    buff.append
+			(stringFromStream
+			  (
+			   preprocessStream1
+			   (
+			    streamFromCopymem(copymem,replaceSpec),
+			    replacement
+			    )
+			   )
+			 );
 		}
 		else if( ruleName.equals("replaceArea") ){
 
-		    System.err.println( "replaceArea is not supported");
-		    System.err.println( srcString(rc,65) );
-
 		    Collection<ParseTree> area  = xpathSubTrees(parser,s,"*/*");
-		    List<ReplaceSpec> replaceSpec = null;
 		    
 		    for(ParseTree e: area){
 
@@ -495,30 +516,24 @@ public class CobolPreprocessor  {
 			    String ruleName2 = parser
 				.getRuleNames()[rc2.getRuleIndex()];
 
-			    if( ruleName2.equals("replaceByStatement")){
-				replaceSpec = replaceSpecList(parser,e);
-			    }
-			    else if( ruleName2.equals("copyStatement") ){
+			    if( ruleName2.equals("copyStatement") ){
 				System.err.println( "copyStatement expanded");
-				System.err.println( srcString(rc,65) );
+				System.err.println( srcString(rc2,65) );
 				String copymem = xpathSubTreeText(parser,e,"*/copySource");
 				List<ReplaceSpec> replaceSpec2 = replaceSpecList(parser,e);
-
-				System.err.println( "replaceSpec2=" + replaceSpec2.toString() );
-				buff.append( streamToString
-					     ( preprocessStream
-					       (streamFromCopymem(copymem,replaceSpec2),
-						replaceSpec)
-					       )
-					     );
-			    }
-			    else if( ruleName2.equals("replaceOffStatement") ){
-				
+				buff.append
+				    (stringFromStream
+				     (
+				      preprocessStream1
+				      (
+				       streamFromCopymem(copymem,replaceSpec2),
+				       replacement
+				       )
+				      )
+				     );
 			    } else {
-				appendAllTexts(buff,e,replaceSpec);
+				appendAllTexts(buff,e,replacement);
 			    }
-			    System.err.println
-				( "replaceSpec=" + replaceSpec.toString() );
 			}
 		    }
 		}
@@ -533,6 +548,88 @@ public class CobolPreprocessor  {
 	return new ByteArrayInputStream(buff.toString().
 					getBytes(StandardCharsets.UTF_8));
     }
+
+
+    /**
+       process replaceStatements after copy expansion done
+
+     */
+
+
+    public InputStream preprocessStream2(InputStream is) throws Exception {
+
+
+	Cobol85PreprocessorParser parser = createParser(is);
+	ParseTree tree = parser.startRule();
+
+	Collection<ParseTree> subs = xpathSubTrees(parser,
+						   tree,
+						   "/startRule/*");
+	List<ReplaceSpec> replaceSpec = List.of();
+	StringBuffer buff = new StringBuffer();
+	
+	for( ParseTree s : subs ){
+
+	    if( s instanceof RuleContext ){
+
+		RuleContext rc = (RuleContext)s;
+		String ruleName = parser.getRuleNames()[rc.getRuleIndex()];
+
+		if( ruleName.equals("charDataLine") ){
+		    appendAllTexts(buff,s,replaceSpec);
+
+		}
+		else if( ruleName.equals("copyStatement") ){
+
+		    System.err.println( "copyStatement remained not expanded");
+		    System.err.println( srcString(rc,65) );
+		    appendAllTexts(buff,s,replaceSpec);
+		}
+		else if( ruleName.equals("replaceOffStatement") ){
+		    replaceSpec = List.of();
+		}
+		else if( ruleName.equals("replaceArea") ){
+
+		    System.err.println( "replaceArea: ");
+		    System.err.println( srcString(rc,65) );
+
+		    Collection<ParseTree> area  = xpathSubTrees(parser,s,"*/*");
+		    
+		    for(ParseTree e: area){
+
+			if( e instanceof RuleContext ){
+			    RuleContext rc2 = (RuleContext)e;
+			    String ruleName2 = parser
+				.getRuleNames()[rc2.getRuleIndex()];
+
+			    if( ruleName2.equals("replaceByStatement")){
+				replaceSpec = replaceSpecList(parser,e);
+			    }
+			    else if( ruleName2.equals("copyStatement") ){
+				System.err.println( "copyStatement remained not expanded");
+				System.err.println( srcString(rc2,65) );
+				appendAllTexts(buff,e,replaceSpec);
+			    }
+			    else if( ruleName2.equals("replaceOffStatement") ){
+				replaceSpec = List.of();
+			    } else {
+				appendAllTexts(buff,e,replaceSpec);
+			    }
+			}
+		    }
+		}
+		else {
+		    throw new RuntimeException("unsupportedRule: " + ruleName);
+		}
+	    }
+	    else {
+		// buff.append(srcString(s,65)); 
+	    }
+	}
+	return new ByteArrayInputStream(buff.toString().
+					getBytes(StandardCharsets.UTF_8));
+    }
+
 
 
     void appendAllTexts(StringBuffer buff,
@@ -589,10 +686,10 @@ public class CobolPreprocessor  {
 	System.err.println("lib=" + lib.getPath());
 	
 	InputStream is0 = toSrcStream(new FileInputStream(lib));
-	return preprocessStream(is0,replaceSpec);
+	return preprocessStream1(is0,replaceSpec);
     }
 
-    String streamToString(InputStream is) throws Exception {
+    String stringFromStream(InputStream is) throws Exception {
 
 	StringBuffer buff = new StringBuffer();
 
@@ -606,6 +703,9 @@ public class CobolPreprocessor  {
 	    buff.append('\n');
 	}
 
+	//System.err.println("stringFromStream: buff=");
+	//System.err.println(buff.toString());
+	
 	return buff.toString();
     }
 

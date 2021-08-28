@@ -6,6 +6,7 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
+import org.junit.rules.TestName;
 
 import static org.hamcrest.Matchers.is;
 import java.io.IOException;
@@ -32,6 +33,9 @@ public class AppTest
 {
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
+
+    @Rule
+    public TestName name = new TestName();
 
     public InputStream toInputStream(String text) throws IOException {
 	    return new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8));
@@ -509,6 +513,39 @@ public class AppTest
 	assertThat(src1,is(fillToWidth("01 YYY PIC X(10).")));	
 	assertThat(src2,is(fillToWidth("01 YYY PIC X(10).")));	
     }
+
+
+    @Test
+    public void testReplaceCopy2() throws Exception 
+    {
+
+	System.err.println("!!!!test case!!!!=" + name.getMethodName());
+
+	CobolPreprocessor prep
+	    = new CobolPreprocessor(tempFolder.getRoot().getPath());
+
+	File file1 = tempFolder.newFile("YYYY.cbl");
+
+	FileUtils.writeStringToFile(file1,
+				    "123456 01 XXX PIC X(10). \n" +
+				    "123456 REPLACE OFF. \n" + 
+				    "123456 01 XXX PIC X(10). \n",
+				    StandardCharsets.UTF_8);
+
+	InputStream is = prep.preprocessStream
+	    (toInputStream
+	     (
+	      "REPLACE XXX BY YYY. \n" +
+	      "COPY YYYY. \n"
+	      )
+	     );
+	BufferedReader rd = bufferedReader(is);
+	String src1 = rd.readLine();
+	String src2 = rd.readLine();
+	assertThat(src1,is(fillToWidth("01 YYY PIC X(10).")));	
+	assertThat(src2,is(fillToWidth("01 XXX PIC X(10).")));	
+    }
+
     
 
 }

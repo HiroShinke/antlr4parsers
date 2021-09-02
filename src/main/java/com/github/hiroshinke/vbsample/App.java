@@ -60,7 +60,7 @@ public class App {
 	Option printAsTree = Option.builder("t")
 	    .argName("tree")
 	    .longOpt("tree")
-	    .desc("print as tree")
+	    .desc("prettyPrint tree")
 	    .build();
 
 	Option printInfo = Option.builder("i")

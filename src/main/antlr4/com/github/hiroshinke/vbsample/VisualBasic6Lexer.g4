@@ -470,10 +470,24 @@ WS: [ \t]+;
 // letters
 
 fragment LETTER:
-	[a-zA-Z_äöüÄÖÜáéíóúÁÉÍÓÚâêîôûÂÊÎÔÛàèìòùÀÈÌÒÙãẽĩõũÃẼĨÕŨçÇ];
-
+	[a-zA-Z_]
+        | // these are the valid characters from 0x80 to 0xFF
+        [\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u00FF]
+        | // these are the letters above 0xFF which only need a single UTF-16 code unit
+        [\u0100-\uD7FF\uE000-\uFFFF] {Character.isLetter((char)_input.LA(-1))}?
+        | // letters which require multiple UTF-16 code units
+        [\uD800-\uDBFF] [\uDC00-\uDFFF] {Character.isLetter(Character.toCodePoint((char)_input.LA(-2), (char)_input.LA(-1)))}?
+        ;
+	
 fragment LETTERORDIGIT:
-	[a-zA-Z0-9_äöüÄÖÜáéíóúÁÉÍÓÚâêîôûÂÊÎÔÛàèìòùÀÈÌÒÙãẽĩõũÃẼĨÕŨçÇ];
+	[a-zA-Z0-9_]
+        | // these are the valid characters from 0x80 to 0xFF
+        [\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u00FF]
+        | // these are the letters above 0xFF which only need a single UTF-16 code unit
+        [\u0100-\uD7FF\uE000-\uFFFF] {Character.isLetter((char)_input.LA(-1))}?
+        | // letters which require multiple UTF-16 code units
+        [\uD800-\uDBFF] [\uDC00-\uDFFF] {Character.isLetter(Character.toCodePoint((char)_input.LA(-2), (char)_input.LA(-1)))}?
+        ;
 
 // case insensitive chars
 

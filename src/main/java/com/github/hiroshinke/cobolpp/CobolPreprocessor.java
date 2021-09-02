@@ -493,16 +493,23 @@ public class CobolPreprocessor  {
 		    String copymem = xpathSubTreeText(parser,s,"*/copySource");
 		    List<ReplaceSpec> replaceSpec = replaceSpecList(parser,s);
 		    System.err.println( "replaceSpec=" + replaceSpec.toString() );
-		    buff.append
-			(stringFromStream
-			  (
-			   preprocessStream1
-			   (
-			    streamFromCopymem(copymem,replaceSpec),
-			    replacement
-			    )
-			   )
-			 );
+
+		    try {
+			buff.append
+			    (stringFromStream
+			     (
+			      preprocessStream1
+			      (
+			       streamFromCopymem(copymem,replaceSpec),
+			       replacement
+			       )
+			      )
+			     );
+
+		    } catch( Exception e ){
+			e.printStackTrace();
+			appendAllTexts(buff,s,replacement);
+		    }
 		}
 		else if( ruleName.equals("replaceArea") ){
 
@@ -521,16 +528,21 @@ public class CobolPreprocessor  {
 				System.err.println( srcString(rc2,65) );
 				String copymem = xpathSubTreeText(parser,e,"*/copySource");
 				List<ReplaceSpec> replaceSpec2 = replaceSpecList(parser,e);
-				buff.append
-				    (stringFromStream
-				     (
-				      preprocessStream1
-				      (
-				       streamFromCopymem(copymem,replaceSpec2),
-				       replacement
-				       )
-				      )
-				     );
+				try {
+				    buff.append
+					(stringFromStream
+					 (
+					  preprocessStream1
+					  (
+					   streamFromCopymem(copymem,replaceSpec2),
+					   replacement
+					   )
+					  )
+					 );
+				} catch(Exception ex) {
+				    ex.printStackTrace();
+				    appendAllTexts(buff,e,replacement);
+				}
 			    } else {
 				appendAllTexts(buff,e,replacement);
 			    }

@@ -214,6 +214,40 @@ public class AntlrUtil {
     }
 
 
+    public static String prettyTree(Parser parser,
+				    ParseTree tree){
+
+	StringBuffer buff = new StringBuffer();
+	prettyTreeHelper(parser,tree,buff,0);
+			 
+	return buff.toString();
+    }
+
+    public static void prettyTreeHelper(Parser parser,
+					ParseTree tree,
+					StringBuffer buff,
+					int level ) {
+
+	if( tree instanceof TerminalNode ){
+	    buff.append(nchar(' ',level));
+	    buff.append(tree.getText());
+	    buff.append("\n");
+	} else {
+	    int id = ((RuleContext)tree).getRuleIndex();
+	    String rn = parser.getRuleNames()[id];
+	    buff.append(nchar(' ',level));
+	    buff.append(rn);
+	    buff.append("\n");
+	    int n = tree.getChildCount();
+	    for(int i=0; i<n; i++){
+		prettyTreeHelper(parser,
+				 tree.getChild(i),
+				 buff,
+				 level + 1);
+	    }
+	}
+    }
+    
     public static void terminalNodeHelper(List<TerminalNode> buff,
 					  ParseTree tree){
 

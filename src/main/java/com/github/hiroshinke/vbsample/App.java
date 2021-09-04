@@ -43,7 +43,7 @@ import org.apache.commons.cli.*;
 
 public class App {
 
-    static boolean asTree = false;
+    static boolean asTree = true;
 
     public static void main(String[] args) throws Exception {
 
@@ -57,10 +57,10 @@ public class App {
 	    .desc("path of src or src directory")
 	    .build();
 
-	Option printAsTree = Option.builder("t")
-	    .argName("tree")
-	    .longOpt("tree")
-	    .desc("prettyPrint tree")
+	Option printAsTree = Option.builder("l")
+	    .argName("lisp")
+	    .longOpt("lisp")
+	    .desc("prettyPrint in lisp format")
 	    .build();
 
 	Option printInfo = Option.builder("i")
@@ -77,7 +77,7 @@ public class App {
 	CommandLine line = cmdParser.parse( opts, args );
 
 	String filePath = line.getOptionValue("s");
-	asTree  = line.hasOption("t");
+	asTree  = ! line.hasOption("l");
 
 	File fileInput = new File(filePath);
 
@@ -103,6 +103,16 @@ public class App {
 	// FileInputStream is = new FileInputStream(file.toPath().toString());
 	// CharStream cs = new UnbufferedCharStream(is,1,Charset.defaultCharset());
 	CharStream cs = CharStreams.fromFileName(file.toPath().toString());
+	printTree(cs);
+
+	System.err.printf( "file end: %s, %f s\n",
+			   file, (System.currentTimeMillis() - start)/1000.0);
+
+    }
+
+
+    static void printTree(CharStream cs) throws Exception {
+
 	VisualBasic6Parser parser = createParser(cs);
 	ParseTree tree = parser.startRule();
 
@@ -111,20 +121,25 @@ public class App {
 	} else {
 	    System.out.println(tree.toStringTree(parser));
 	}
+    }
+    
 
+    static void printInfo(File file) throws Exception {
+
+	long start = System.currentTimeMillis();
+
+	System.err.printf( "file start: %s\n",file.toString());
+
+	CharStream cs = CharStreams.fromFileName(file.toPath().toString());
+	printInfo(file.toString(), cs);
+	
 	System.err.printf( "file end: %s, %f s\n",
 			   file, (System.currentTimeMillis() - start)/1000.0);
 
     }
 
+    static void printInfo(String file, CharStream cs) throws Exception {
 
-    static void printInfo(File file) throws Exception {
-
-	long start = System.currentTimeMillis();
-	
-	System.err.printf( "file start: %s\n",file.toString());
-
-	CharStream cs = CharStreams.fromFileName(file.toPath().toString());
 	VisualBasic6Parser parser = createParser(cs);
 	ParseTree tree = parser.startRule();
 
@@ -141,14 +156,12 @@ public class App {
 	     );
 	
 	for( ParseTree c : calls1){
-	    printOutput( "ProcedureCall", file.toString() , c.getText());
+	    printOutput( "ProcedureCall", file , c.getText());
 	}
-
-	System.err.printf( "file end: %s, %f s\n",
-			   file, (System.currentTimeMillis() - start)/1000.0);
 
     }
 
+    
     static void printOutput(String... strs){
 	System.out.println( String.join(",", strs) );
     }

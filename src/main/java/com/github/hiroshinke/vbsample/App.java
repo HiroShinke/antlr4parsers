@@ -100,9 +100,9 @@ public class App {
 	
 	System.err.printf( "file start: %s\n",file.toString());
 
-	// FileInputStream is = new FileInputStream(file.toPath().toString());
-	// CharStream cs = new UnbufferedCharStream(is,1,Charset.defaultCharset());
-	CharStream cs = CharStreams.fromFileName(file.toPath().toString());
+	CharStream cs = fileToStream(file);
+	// CharStream cs = CharStreams.fromFileName(file.toPath().toString());
+
 	printTree(cs);
 
 	System.err.printf( "file end: %s, %f s\n",
@@ -122,15 +122,29 @@ public class App {
 	    System.out.println(tree.toStringTree(parser));
 	}
     }
-    
+
+    static CharStream fileToStream(File file) throws Exception {
+
+	InputStreamReader bi = new InputStreamReader(new FileInputStream(file));
+	BufferedReader rd = new BufferedReader(bi);
+	String line = null;
+	StringBuffer buff = new StringBuffer();
+	while( (line = rd.readLine()) != null ){
+	    buff.append(line);
+	    buff.append("\n");
+	}
+	return new ANTLRInputStream(buff.toString());
+    }
 
     static void printInfo(File file) throws Exception {
 
 	long start = System.currentTimeMillis();
 
 	System.err.printf( "file start: %s\n",file.toString());
+	
+	CharStream cs = fileToStream(file);
+	// CharStream cs = CharStreams.fromFileName(file.toPath().toString());
 
-	CharStream cs = CharStreams.fromFileName(file.toPath().toString());
 	VisualBasic6Parser parser = createParser(cs);
 
 	printVarDef(file.toString(), parser);	

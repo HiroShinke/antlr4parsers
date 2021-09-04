@@ -131,16 +131,21 @@ public class App {
 	System.err.printf( "file start: %s\n",file.toString());
 
 	CharStream cs = CharStreams.fromFileName(file.toPath().toString());
-	printInfo(file.toString(), cs);
+	VisualBasic6Parser parser = createParser(cs);
+
+	printVarDef(file.toString(), parser);	
+	printConstDef(file.toString(), parser);	
+	printFuncDef(file.toString(), parser);
+	printCallInfo(file.toString(), parser);
 	
 	System.err.printf( "file end: %s, %f s\n",
 			   file, (System.currentTimeMillis() - start)/1000.0);
 
     }
 
-    static void printInfo(String file, CharStream cs) throws Exception {
+    static void printCallInfo(String file, VisualBasic6Parser parser) throws Exception {
 
-	VisualBasic6Parser parser = createParser(cs);
+	parser.reset();
 	ParseTree tree = parser.startRule();
 
 	Collection<ParseTree> calls1 = xpathSubTrees
@@ -161,6 +166,65 @@ public class App {
 
     }
 
+    static void printFuncDef(String file, VisualBasic6Parser parser) throws Exception {
+
+	parser.reset();
+	ParseTree tree = parser.startRule();
+
+	Collection<ParseTree> defs = xpathSubTrees
+	    (parser,tree,List.of
+	     ("//functionStmt/ambiguousIdentifier")
+	     );
+
+	for( ParseTree c : defs){
+	    printOutput( "functionStmt", file , c.getText());
+	}
+
+	defs = xpathSubTrees
+	    (parser,tree,List.of
+	     ("//subStmt/ambiguousIdentifier")
+	     );
+
+	for( ParseTree c : defs){
+	    printOutput( "subStmt", file , c.getText());
+	}
+
+	
+    }
+
+    static void printVarDef(String file, VisualBasic6Parser parser) throws Exception {
+
+	parser.reset();
+	ParseTree tree = parser.startRule();
+
+	Collection<ParseTree> defs = xpathSubTrees
+	    (parser,tree,List.of
+	     ("//variableStmt//variableSubStmt",
+	      "//letStmt/implicitCallStmt_InStmt/"+
+	      "iCS_S_VariableOrProcedureCall/ambiguousIdentifier"
+	      ));
+
+	for( ParseTree c : defs){
+	    printOutput( "variableStmt", file , c.getText());
+	}
+
+    }
+
+
+    static void printConstDef(String file, VisualBasic6Parser parser) throws Exception {
+
+	parser.reset();
+	ParseTree tree = parser.startRule();
+
+	Collection<ParseTree> defs = xpathSubTrees
+	    (parser,tree,List.of
+	     ("//constStmt/constSubStmt/ambiguousIdentifier"
+	      ));
+
+	for( ParseTree c : defs){
+	    printOutput( "constStmt", file , c.getText());
+	}
+    }
     
     static void printOutput(String... strs){
 	System.out.println( String.join(",", strs) );

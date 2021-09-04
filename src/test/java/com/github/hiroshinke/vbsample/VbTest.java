@@ -45,7 +45,8 @@ public class VbTest
     public void explicitCallStmt1() throws Exception 
     {
 	String src = "Call SubExample1\n";
-	App.printInfo("",new ANTLRInputStream(src));
+	VisualBasic6Parser parser = App.createParser(new ANTLRInputStream(src));
+	App.printCallInfo("",parser);
 	assertThat(systemOutRule.getLog(),
 		   is("ProcedureCall,,SubExample1\n"));
     }
@@ -68,7 +69,8 @@ public class VbTest
     public void explicitCallStmt3() throws Exception 
     {
 	String src = "Call SubExample1(\"some arg\")\n";
-	App.printInfo("",new ANTLRInputStream(src));
+	VisualBasic6Parser parser = App.createParser(new ANTLRInputStream(src));	
+	App.printCallInfo("",parser);
 	assertThat(systemOutRule.getLog(),
 		   is("ProcedureCall,,SubExample1\n"));
     }
@@ -92,7 +94,8 @@ public class VbTest
     public void implicitCallStmt_InBlock1() throws Exception 
     {
 	String src = "SubExample1\n";
-	App.printInfo("",new ANTLRInputStream(src));
+	VisualBasic6Parser parser = App.createParser(new ANTLRInputStream(src));
+	App.printCallInfo("",parser);
 	assertThat(systemOutRule.getLog(),
 		   is("ProcedureCall,,SubExample1\n"));
     }
@@ -116,7 +119,8 @@ public class VbTest
     public void implicitCallStmt_InBlock3() throws Exception 
     {
 	String src = "SubExample1 \"some arg\"\n";
-	App.printInfo("",new ANTLRInputStream(src));
+	VisualBasic6Parser parser = App.createParser(new ANTLRInputStream(src));
+	App.printCallInfo("",parser);
 	assertThat(systemOutRule.getLog(),
 		   is("ProcedureCall,,SubExample1\n"));
     }
@@ -139,7 +143,8 @@ public class VbTest
     public void nestedCall1() throws Exception 
     {
 	String src = "x = f(g(1,2,3),4) \n";
-	App.printInfo("",new ANTLRInputStream(src));
+	VisualBasic6Parser parser = App.createParser(new ANTLRInputStream(src));
+	App.printCallInfo("",parser);
 	assertThat(systemOutRule.getLog(),
 		   is("ProcedureCall,,x\n" +
 		      "ProcedureCall,,f\n" +	
@@ -210,7 +215,8 @@ public class VbTest
 	    "Private Sub cmdClear_Click()\n" +
 	    "txtHello.Text = \"\"\n" +
 	    "End Sub\n";
-	App.printInfo("",new ANTLRInputStream(src));
+	VisualBasic6Parser parser = App.createParser(new ANTLRInputStream(src));
+	App.printCallInfo("",parser);
 	assertThat(systemOutRule.getLog(),
 		   is("ProcedureCall,,txtHello\n" +
 		      "ProcedureCall,,Text\n"));

@@ -603,6 +603,27 @@ public class AppTest
 	assertThat(src2,is(fillToWidth("01 XXX PIC X(10).")));	
     }
 
+
+    @Test
+    public void testReplaceCopy3() throws Exception 
+    {
+	CobolPreprocessor prep
+	    = new CobolPreprocessor(tempFolder.getRoot().getPath());
+
+	InputStream is = prep.preprocessStream
+	    (toInputStream
+	     (
+	      "REPLACE XXX BY YYY. \n" +
+	      "COPY YYYY. \n" +
+	      "01 XXX PIC X(10). \n"
+	      )
+	     );
+	BufferedReader rd = bufferedReader(is);
+	String src1 = rd.readLine();
+	String src2 = rd.readLine();
+	assertThat(src1,is(fillToWidth("COPY YYYY.")));		
+	assertThat(src2,is(fillToWidth("01 YYY PIC X(10).")));	
+    }
     
 
 }

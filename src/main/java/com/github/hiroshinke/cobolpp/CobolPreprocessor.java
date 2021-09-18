@@ -695,7 +695,7 @@ public class CobolPreprocessor  {
 
 	File lib = findFile(copymem);
 	if( lib == null) {
-	    throw new AssertionError("copymem not found: " + copymem);
+	    throw new IOException("copymem not found: " + copymem);
 	}
 	System.err.println("lib=" + lib.getPath());
 	

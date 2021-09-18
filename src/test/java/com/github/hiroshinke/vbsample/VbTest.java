@@ -188,7 +188,7 @@ public class VbTest
 
     
     @Test
-    public void yyyyy0() throws Exception 
+    public void implicitCallStmt_S1() throws Exception 
     {
 	String src = 
 	    "Private Sub cmdClear_Click()\n" +
@@ -209,7 +209,7 @@ public class VbTest
     }
 
     @Test
-    public void yyyyy() throws Exception 
+    public void implicitCallStmt_S2() throws Exception 
     {
 	String src = 
 	    "Private Sub cmdClear_Click()\n" +

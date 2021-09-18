@@ -290,6 +290,32 @@ public class App2Test
 
 
     @Test
+    public void testDataDescCopy4() throws Exception 
+    {
+
+	CobolPreprocessor prep
+	    = new CobolPreprocessor(tempFolder.getRoot().getPath());
+
+	String src = cobolTemplate
+	    (
+	     "01 XXXX PIC 9(10) REDEFINES YYYY. \n" +
+	     "COPY YYYY. \n" +
+	     "01 YYYY PIC 9(10). \n",
+	     "CALL 'aaaa' USING XXXX.\n" +
+	     "MOVE 1 TO XXXX.\n"
+	     );
+
+	InputStream is = prep.preprocessStream(toInputStream(src));
+	Cobol85Parser parser = App.createParser(is);
+	App.printDataDescriptionInfo("prog1",parser);
+	assertThat(systemOutRule.getLog(),
+		   is("dataDescription,prog1,01,XXXX,9(10),,,YYYY,,0,10\n" +
+		      "dataDescription,prog1,01,YYYY,9(10),,,,,010\n"
+		      ));
+    }
+
+    
+    @Test
     public void testDataDescGroup1() throws Exception 
     {
 	String src = cobolTemplate

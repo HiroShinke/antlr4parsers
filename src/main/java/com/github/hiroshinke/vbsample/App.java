@@ -117,9 +117,9 @@ public class App {
 	ParseTree tree = parser.startRule();
 
 	if( asTree ){
-	    System.out.println(prettyTree(parser,tree));
+	    System.err.println(prettyTree(parser,tree));
 	} else {
-	    System.out.println(tree.toStringTree(parser));
+	    System.err.println(tree.toStringTree(parser));
 	}
     }
 
@@ -136,7 +136,7 @@ public class App {
 	return new ANTLRInputStream(buff.toString());
     }
 
-    static void printInfo(File file) throws Exception {
+    static void printInfo0(File file) throws Exception {
 
 	long start = System.currentTimeMillis();
 
@@ -147,7 +147,7 @@ public class App {
 
 	VisualBasic6Parser parser = createParser(cs);
 
-	printVarDef(file.toString(), parser);	
+	//printVarDef(file.toString(), parser);	
 	printConstDef(file.toString(), parser);	
 	printFuncDef(file.toString(), parser);
 	printCallInfo(file.toString(), parser);
@@ -157,6 +157,180 @@ public class App {
 
     }
 
+
+    static void printInfo(File file) throws Exception {
+
+	long start = System.currentTimeMillis();
+
+	System.err.printf( "file start: %s\n",file.toString());
+
+	CharStream cs = fileToStream(file);
+	// CharStream cs = CharStreams.fromFileName(file.toPath().toString());
+	printInfo(file.toString(),cs);
+
+	System.err.printf( "file end: %s, %f s\n",
+			   file, (System.currentTimeMillis() - start)/1000.0);
+    }
+
+    
+    static void printInfo(String file, CharStream cs) throws Exception {
+
+	VisualBasic6Parser parser = createParser(cs);
+	ParseTree tree = parser.startRule();
+	Collection<ParseTree> elms = xpathSubTrees
+	    (parser,tree,"//moduleBodyElement/*");
+
+	for(ParseTree e : elms ){
+
+	    if( e instanceof RuleContext ){
+
+		RuleContext rc = (RuleContext)e;
+		String ruleName = parser.getRuleNames()[rc.getRuleIndex()];
+
+		if( ruleName.equals("functionStmt") ){
+
+		    String visibility = xpathSubTreeText
+			(parser,e,"*/visibility");
+		    String name = xpathSubTreeText
+			(parser,e,"*/ambiguousIdentifier");
+
+		    printOutput("functionStmt",name,visibility);
+
+		    ParseTree block = xpathSubTree(parser,e,"*/block");
+		    printBlock(file,parser,block);
+		    
+		}
+		else if( ruleName.equals("subStmt") ){
+
+		    String visibility = xpathSubTreeText
+			(parser,e,"*/visibility");
+		    String name = xpathSubTreeText
+			(parser,e,"*/ambiguousIdentifier");
+
+		    printOutput("subStmt",name,visibility);
+
+		    ParseTree block = xpathSubTree(parser,e,"*/block");
+		    printBlock(file,parser,block);
+		}
+		else if( ruleName.equals("declareStmt") ){
+
+		    String name = xpathSubTreeText
+			(parser,e,"*/ambiguousIdentifier");
+		    String lib = xpathSubTreeText
+			(parser,e,"*/LIB");
+		    String lit = xpathSubTreeText
+			(parser,e,"*/STRINGLITERAL");
+
+		    printOutput("declareStmt",name,lib,lit);
+		}
+		else if( ruleName.equals("moduleBlock") ){
+
+		    ParseTree block = xpathSubTree(parser,e,"*/block");
+		    printBlock(file,parser,block);
+		}
+	    }
+	}
+    }
+
+    static void printBlock(String file,
+			   Parser parser,
+			   ParseTree block) throws Exception {
+
+	Collection<ParseTree> stmts = xpathSubTrees
+	    (parser,block,"*/blockStmt/*");
+
+	for(ParseTree s : stmts ){
+
+	    if( s instanceof RuleContext ){
+
+		RuleContext rc = (RuleContext)s;
+		String ruleName = parser.getRuleNames()[rc.getRuleIndex()];
+
+		if( ruleName.equals("variableStmt") ){
+
+		    String visibility = xpathSubTreeText(parser,s,"*/visibility");
+		    Collection<ParseTree> vars = xpathSubTrees
+			(parser,s,"*//variableSubStmt/ambiguousIdentifier");
+		    
+		    for( ParseTree v: vars) {
+			printOutput( "variableStmt", file , visibility, v.getText());
+		    }
+		}
+		else if( ruleName.equals("constStmt") ){
+
+		    String visibility = xpathSubTreeText
+			(parser,s,
+			 "*/publicPrivateGlobalVisibility");
+
+		    Collection<ParseTree> defs = xpathSubTrees
+			(parser,s,List.of
+			 ("*/constSubStmt/ambiguousIdentifier"
+			  ));
+		    
+		    for( ParseTree c : defs){
+			printOutput( "constStmt", file , visibility, c.getText());
+		    }
+		    
+		}
+		else if( ruleName.equals("letStmt") ){
+
+		    String leftVar = xpathSubTreeText
+			(parser,s,
+			 "*/implicitCallStmt_InStmt");
+
+		    printOutput( "letStmt", file , "", leftVar);
+
+		}
+		else if( ruleName.equals("explicitCallStmt") ){
+
+		    String procName = xpathSubTreeText
+			(parser,s,
+			 "*/eCS_ProcedureCall/ambiguousIdentifier");
+
+		    String member1 = xpathSubTreeText
+			(parser,s,
+			 "*/eCS_MemberProcedureCall/implicitCallStmt_InStmt");
+		    String member2 = xpathSubTreeText
+			(parser,s,
+			 "*/eCS_MemberProcedureCall/ambiguousIdentifier");
+
+		    String name = (!procName.isEmpty())
+			? procName : member1 + "." + member2 ;
+		    
+		    printOutput( "explicitCallStmt", file , "", name );
+
+		}
+		else if( ruleName.equals("implicitCallStmt_InBlock") ){
+
+		    String leftVar = xpathSubTreeText
+			(parser,s,
+			 "*/implicitCallStmt_InStmt");
+
+		    printOutput( "letStmt", file , "", leftVar);
+
+		}
+		
+	    }
+	}
+	
+	Collection<ParseTree> values = xpathSubTrees
+	    (parser,block,"*//valueStmt");
+
+	for(ParseTree v: values) {
+
+	    String name = xpathSubTreeText
+		(parser,v,"*/implicitCallStmt_InStmt");
+	    
+	    String assign = xpathSubTreeText
+		(parser,v,"*/ASSIGN");
+
+	    if( ! name.isEmpty() && assign.isEmpty() ){
+		printOutput( "valueStmt", file , "", name);
+	    }
+	}
+    }
+
+    
     static void printCallInfo(String file, VisualBasic6Parser parser) throws Exception {
 
 	parser.reset();
@@ -186,44 +360,48 @@ public class App {
 	ParseTree tree = parser.startRule();
 
 	Collection<ParseTree> defs = xpathSubTrees
-	    (parser,tree,List.of
-	     ("//functionStmt/ambiguousIdentifier")
-	     );
+	    (parser,tree,List.of("//functionStmt"));
 
 	for( ParseTree c : defs){
-	    printOutput( "functionStmt", file , c.getText());
+	    String visibility = xpathSubTreeText(parser,c,"*/visibility");
+	    String name = xpathSubTreeText(parser,c,"*/ambiguousIdentifier");
+	    String type = xpathSubTreeText(parser,c,"*/asTypeClause");
+	    printOutput( "functionStmt", file , visibility, name, type );
+	    printVarDef(file,parser,c,name);
 	}
 
 	defs = xpathSubTrees
-	    (parser,tree,List.of
-	     ("//subStmt/ambiguousIdentifier")
-	     );
-
+	    (parser,tree,List.of("//subStmt"));
+	     
 	for( ParseTree c : defs){
-	    printOutput( "subStmt", file , c.getText());
+	    String visibility = xpathSubTreeText(parser,c,"*/visibility");
+	    String name = xpathSubTreeText(parser,c,"*/ambiguousIdentifier");
+	    printOutput( "subStmt", file , visibility, name, "");
+	    printVarDef(file,parser,c,name);
 	}
-
 	
     }
 
-    static void printVarDef(String file, VisualBasic6Parser parser) throws Exception {
+    static void printVarDef(String file,
+			    Parser parser,
+			    ParseTree func,
+			    String name ) throws Exception {
 
 	parser.reset();
-	ParseTree tree = parser.startRule();
-
-	Collection<ParseTree> defs = xpathSubTrees
-	    (parser,tree,List.of
-	     ("//variableStmt//variableSubStmt",
-	      "//letStmt/implicitCallStmt_InStmt/"+
-	      "iCS_S_VariableOrProcedureCall/ambiguousIdentifier"
-	      ));
-
+	Collection<ParseTree> defs = xpathSubTrees(parser,
+						   func,
+						   List.of("//variableStmt"));
 	for( ParseTree c : defs){
-	    printOutput( "variableStmt", file , c.getText());
+
+	    String visibility = xpathSubTreeText(parser,c,"*/visibility");
+	    Collection<ParseTree> vars = xpathSubTrees
+		(parser,c,"*//variableSubStmt/ambiguousIdentifier");
+
+	    for( ParseTree v: vars) {
+		printOutput( "variableStmt", file , visibility, v.getText());
+	    }
 	}
-
     }
-
 
     static void printConstDef(String file, VisualBasic6Parser parser) throws Exception {
 

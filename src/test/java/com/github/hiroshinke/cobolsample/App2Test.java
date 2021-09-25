@@ -20,6 +20,9 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 import com.github.hiroshinke.cobolpp.CobolPreprocessor;
 
+import org.antlr.v4.runtime.tree.ParseTree;
+import static com.github.hiroshinke.antlr4.AntlrUtil.prettyTree;
+
 /**
  * Unit test for simple App.
  */
@@ -307,10 +310,14 @@ public class App2Test
 
 	InputStream is = prep.preprocessStream(toInputStream(src));
 	Cobol85Parser parser = App.createParser(is);
+
+	//ParseTree tree = parser.startRule();	    
+	//System.err.println(prettyTree(parser,tree));	    
+
 	App.printDataDescriptionInfo("prog1",parser);
 	assertThat(systemOutRule.getLog(),
 		   is("dataDescription,prog1,01,XXXX,9(10),,,YYYY,,0,10\n" +
-		      "dataDescription,prog1,01,YYYY,9(10),,,,,010\n"
+		      "dataDescription,prog1,01,YYYY,9(10),,,,,0,10\n"
 		      ));
     }
 
@@ -602,6 +609,101 @@ public class App2Test
 	assertThat(systemOutRule.getLog(),
 		   is("moveStetement,prog1,X OF Y,XXXX\n"));
     }
+
+    // key word VALUE is omitted
+    @Test
+    public void testErrorDesc1() throws Exception 
+    {
+	String src = cobolTemplate
+	    (
+	     "01 XXXX 10 PIC 9(10). \n",
+	     "CALL 'aaaa' USING XXXX.\n" +
+	     "MOVE 1 TO XXXX.\n"
+	     );
+	InputStream is = toInputStream(src);
+	Cobol85Parser parser = App.createParser(is);
+	App.printDataDescriptionInfo("prog1",parser);
+	assertThat(systemOutRule.getLog(),
+		   is("dataDescription,prog1,01,XXXX,9(10),,10,,,0,10\n"));
+    }
+
+
+    // key word VALUE is omitted
+    @Test
+    public void testErrorDesc2() throws Exception 
+    {
+	String src = cobolTemplate
+	    (
+	     "01 XXXX X PIC 9(10). \n",
+	     "CALL 'aaaa' USING XXXX.\n" +
+	     "MOVE 1 TO XXXX.\n"
+	     );
+	InputStream is = toInputStream(src);
+	Cobol85Parser parser = App.createParser(is);
+	App.printDataDescriptionInfo("prog1",parser);
+	assertThat(systemOutRule.getLog(),
+		   is("dataDescription,prog1,01,XXXX,9(10),,X,,,0,10\n"));
+    }
+
+
+    // key word VALUE is omitted2
+    @Test
+    public void testErrorDesc3() throws Exception 
+    {
+	String src = cobolTemplate
+	    (
+	     "01 XXXX X Y PIC 9(10). \n",
+	     "CALL 'aaaa' USING XXXX.\n" +
+	     "MOVE 1 TO XXXX.\n"
+	     );
+	InputStream is = toInputStream(src);
+	Cobol85Parser parser = App.createParser(is);
+	App.printDataDescriptionInfo("prog1",parser);
+	assertThat(systemOutRule.getLog(),
+		   is("dataDescription,prog1,01,XXXX,9(10),,X,,,0,10\n"));
+    }
+
+
+    // key word MOVE is inserted
+    @Test
+    public void testErrorDesc4() throws Exception 
+    {
+	String src = cobolTemplate
+	    (
+	     "01 MOVE PIC 9(10). \n",
+	     "CALL 'aaaa' USING XXXX.\n" +
+	     "MOVE 1 TO XXXX.\n"
+	     );
+	InputStream is = toInputStream(src);
+	Cobol85Parser parser = App.createParser(is);
+	App.printDataDescriptionInfo("prog1",parser);
+	assertThat(systemOutRule.getLog(),
+		   is("dataDescription,prog1,01,,9(10),,,,,0,10\n"));
+    }
+    
+    // copy statement remained in dataDescriptionEntry
+    @Test
+    public void testErrorDesc5() throws Exception 
+    {
+	String src = cobolTemplate
+	    (
+	     "COPY XXXX. \n"+
+	     "01 XXXX PIC 9(10). \n",
+	     "CALL 'aaaa' USING XXXX.\n" +
+	     "MOVE 1 TO XXXX.\n"
+	     );
+	InputStream is = toInputStream(src);
+	Cobol85Parser parser = App.createParser(is);
+	App.printDataDescriptionInfo("prog1",parser);
+	assertThat(systemOutRule.getLog(),
+		   is("dataDescription,prog1,01,XXXX,9(10),,,,,0,10\n"));
+    }
+    
+
+    
+
+
+    
 
     
 }

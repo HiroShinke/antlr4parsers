@@ -1,5 +1,5 @@
 
-package com.github.hiroshinke.cobolsample;;
+package com.github.hiroshinke.cobolsample;
 
 /**
  * Hello world!
@@ -132,6 +132,9 @@ class App {
         Cobol85Lexer lexer = new Cobol85Lexer(input); 
         CommonTokenStream tokens = new CommonTokenStream(lexer); 
         Cobol85Parser parser = new Cobol85Parser(tokens);
+
+	// parser.removeErrorHandler();
+	parser.setErrorHandler(new CobolErrorStrategy());
 
 	return parser;
     }

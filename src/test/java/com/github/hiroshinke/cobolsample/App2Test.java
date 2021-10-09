@@ -700,10 +700,99 @@ public class App2Test
     }
     
 
-    
+    // copy statement remained in dataDescriptionEntry
+    @Test
+    public void testErrorDesc6() throws Exception 
+    {
+	String src = cobolTemplate
+	    (
+	     "COPY XXXX. \n"+
+	     "01 XXXX PIC 9(10). \n" + 
+	     "01 YYYY PIC 9(10). \n" + 
+	     "01 ZZZZ PIC 9(10). \n",
+	     "CALL 'aaaa' USING XXXX.\n" +
+	     "MOVE 1 TO XXXX.\n"
+	     );
+	InputStream is = toInputStream(src);
+	Cobol85Parser parser = App.createParser(is);
+	App.printDataDescriptionInfo("prog1",parser);
+	assertThat(systemOutRule.getLog(),
+		   is("dataDescription,prog1,01,XXXX,9(10),,,,,0,10\n" +
+		      "dataDescription,prog1,01,YYYY,9(10),,,,,0,10\n" +
+		      "dataDescription,prog1,01,ZZZZ,9(10),,,,,0,10\n"));
+    }
+
+
+    // copy statement remained in dataDescriptionEntry
+    @Test
+    public void testErrorDesc7() throws Exception 
+    {
+	String src = cobolTemplate
+	    (
+	     "01 XXXX PIC 9(10). \n" + 
+	     "COPY XXXX. \n"+
+	     "01 YYYY PIC 9(10). \n" + 
+	     "01 ZZZZ PIC 9(10). \n",
+	     "CALL 'aaaa' USING XXXX.\n" +
+	     "MOVE 1 TO XXXX.\n"
+	     );
+	InputStream is = toInputStream(src);
+	Cobol85Parser parser = App.createParser(is);
+	App.printDataDescriptionInfo("prog1",parser);
+	assertThat(systemOutRule.getLog(),
+		   is("dataDescription,prog1,01,XXXX,9(10),,,,,0,10\n" +
+		      "dataDescription,prog1,01,YYYY,9(10),,,,,0,10\n" +
+		      "dataDescription,prog1,01,ZZZZ,9(10),,,,,0,10\n"));
+    }
+
+
+    // copy statement remained in dataDescriptionEntry
+    @Test
+    public void testErrorDesc8() throws Exception 
+    {
+	String src = cobolTemplate
+	    (
+	     "01 XXXX PIC 9(10). \n" + 
+	     "01 YYYY PIC 9(10). \n" + 
+	     "COPY XXXX. \n"+
+	     "01 ZZZZ PIC 9(10). \n",
+	     "CALL 'aaaa' USING XXXX.\n" +
+	     "MOVE 1 TO XXXX.\n"
+	     );
+	InputStream is = toInputStream(src);
+	Cobol85Parser parser = App.createParser(is);
+	App.printDataDescriptionInfo("prog1",parser);
+	assertThat(systemOutRule.getLog(),
+		   is("dataDescription,prog1,01,XXXX,9(10),,,,,0,10\n" +
+		      "dataDescription,prog1,01,YYYY,9(10),,,,,0,10\n" +
+		      "dataDescription,prog1,01,ZZZZ,9(10),,,,,0,10\n"));
+    }
+
+
+    // copy statement remained in dataDescriptionEntry
+    @Test
+    public void testErrorDesc9() throws Exception 
+    {
+	String src = cobolTemplate
+	    (
+	     "01 XXXX PIC 9(10). \n" + 
+	     "01 YYYY PIC 9(10). \n" + 
+	     "01 ZZZZ PIC 9(10). \n" +
+	     "COPY XXXX. \n",
+	     "CALL 'aaaa' USING XXXX.\n" +
+	     "MOVE 1 TO XXXX.\n"
+	     );
+	InputStream is = toInputStream(src);
+	Cobol85Parser parser = App.createParser(is);
+	App.printDataDescriptionInfo("prog1",parser);
+	assertThat(systemOutRule.getLog(),
+		   is("dataDescription,prog1,01,XXXX,9(10),,,,,0,10\n" +
+		      "dataDescription,prog1,01,YYYY,9(10),,,,,0,10\n" +
+		      "dataDescription,prog1,01,ZZZZ,9(10),,,,,0,10\n"));
+    }
 
 
     
-
+    
     
 }
